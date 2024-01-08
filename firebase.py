@@ -7,6 +7,6 @@ cred = credentials.Certificate("firebase_credentials.json")
 firebase_admin.initialize_app(cred)
 
 #storing client db data to firebase
-db = firestore.client()
-db.collection("person").add({'name': 'John', 'age': '40'})
+#db = firestore.client()
+#db.collection("person").add({'name': 'John', 'age': '40'})
 
