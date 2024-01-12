@@ -9,5 +9,5 @@ firebase_admin.initialize_app(cred)
 #storing client db data to firebase
 db = firestore.client()
 # db.collection("person").add({'name': 'Johny', 'age': '40'})
-db.collection("ingredient").add({'ingredient_id': '40', 'ingredient_name': 'Grains', 'ingredient_type_code': '01' })
+#db.collection("ingredient").add({'ingredient_id': '40', 'ingredient_name': 'Grains', 'ingredient_type_code': '01'})
 
