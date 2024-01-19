@@ -18,6 +18,7 @@ class IngredientResource(Resource):
             for doc in docs:
                 data.append(doc.to_dict())
 
+            response = {}
             if data:
                 # If data is present, return a success response
                 response = {
@@ -25,7 +26,6 @@ class IngredientResource(Resource):
                     "message": "Data retrieved successfully",
                     "data": data
                 }
-                return response, 200
             else:
                 # If no data is present, return a response with a message
                 response = {
@@ -33,7 +33,7 @@ class IngredientResource(Resource):
                     "message": "No data available",
                     "data": []
                 }
-                return response, 200
+            return response, 200
 
         except Exception as e:
             # Handle the exception and return an appropriate response
@@ -57,21 +57,21 @@ class IngredientResourceWithCategory(Resource):
             for doc in docs:
                 data.append(doc.to_dict())
 
+            response = {}
             if data:
                 # If data is present, return a success response
-
+                print('data', data)
                 # Filter data based on the condition (alph_val equals "Carb")
                 filtered_data = [
                     {"ingredient_id": item.get("ingredient_id"), "ingredient_name": item.get("ingredient_name")}
                     for item in data if item.get("ingredient_type_code") == category
                 ]
-                
+                print('filtered_data', filtered_data)
                 response = {
                     "status": "1",
                     "message": "Data retrieved successfully",
                     "data": filtered_data
                 }
-                return response, 200
             else:
                 # If no data is present, return a response with a message
                 response = {
@@ -79,7 +79,7 @@ class IngredientResourceWithCategory(Resource):
                     "message": "No data available",
                     "data": []
                 }
-                return response, 200
+            return response, 200
 
         except Exception as e:
             # Handle the exception and return an appropriate response
