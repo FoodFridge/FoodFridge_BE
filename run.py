@@ -5,7 +5,8 @@ from app.core.firebase import initialize_firebase_app, firestore
 from app.api.v1.routes.resources.alpha_resource import AlphaResource
 from app.api.v1.routes.resources.ingredient_resource import IngredientResource ,IngredientResourceWithCategory
 from app.api.v1.routes.resources.favorite_resource import AddFavoriteResource, FavoriteResourceByUser
-from app.api.v1.routes.resources.favorite_resource import AddFavoriteResource, FavoriteResourceByUser
+from app.api.v1.routes.resources.recipe_resource import GenerateRecipeFromIngredients
+from app.api.v1.routes.resources.google_resource import SearchWithRecipe
 
 app = Flask(__name__)
 api = Api(app)  # Initialize the Api object
@@ -20,6 +21,7 @@ api.add_resource(IngredientResourceWithCategory, '/api/v1/ingredient/<string:cat
 api.add_resource(AddFavoriteResource, '/api/v1/favorite')
 api.add_resource(FavoriteResourceByUser, '/api/v1/favorite/<string:user_id>')
 api.add_resource(GenerateRecipeFromIngredients, '/api/v1/GenerateRecipe/')
+api.add_resource(SearchWithRecipe, '/api/v1/search/<string:recipeName>')
 
 if __name__ == '__main__':
     app.run(debug=True)

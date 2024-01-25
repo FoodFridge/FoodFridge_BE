@@ -27,7 +27,7 @@ class GenerateRecipeFromIngredients(Resource):
                 }
                 load_dotenv()
 
-                api_key = os.getenv("API_KEY_SEARCH")
+                api_key = os.getenv("RAPIDAPI_KEY")
 
                 # Check if API key is available
                 if api_key is None:
