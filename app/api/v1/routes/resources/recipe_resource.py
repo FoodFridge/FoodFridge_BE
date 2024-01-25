@@ -8,10 +8,10 @@ import os
 
 class GenerateRecipeFromIngredients(Resource):
 
-    def post(self):   
+    def get(self):   
 
         try:
-            
+            #อาจจะต้องดูตอนรับ Param ว่าเป็นแบบไหน
             ingredients_tuple = request.form.getlist('ingredients')
             
             if ingredients_tuple:
