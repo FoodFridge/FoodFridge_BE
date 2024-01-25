@@ -2,6 +2,7 @@ from flask import request, jsonify
 from flask_restful import Resource
 from firebase_admin import auth, initialize_app, credentials
 from app.core.firebase import initialize_firebase_app, firestore
+# import logging
 
 
 class FavoriteResourceByUser(Resource):
@@ -52,8 +53,7 @@ class FavoriteResourceByUser(Resource):
 
 class AddFavoriteResource(Resource):
 
-
-    def put(self):
+    def post(self):
         try:
             db = firestore.client()
 
