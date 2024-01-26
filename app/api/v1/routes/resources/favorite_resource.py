@@ -28,7 +28,7 @@ class FavoriteResourceByUser(Resource):
                 filtered_data = [
                     {"fav_id": item.get("fav_id"), "img": item.get("img"), "title": item.get("title"), "recipeName": item.get("recipeName"), 
                      "url": item.get("url")}
-                    for item in data if item.get("user_id") == user_id
+                    for item in data if item.get("user_id") == user_id and item.get("status") == "Y"
                 ]
                 print('filtered_data', filtered_data)
                 response = {
@@ -52,15 +52,15 @@ class FavoriteResourceByUser(Resource):
 
 
 class AddFavoriteResource(Resource):
-
+    #to do find user id 
     def post(self):
         try:
             db = firestore.client()
 
             data = request.get_json()
 
-            fav_id = data.get('fav_id')
             img = data.get('img')
+            status = data.get('status')
             recipeName = data.get('recipeName')
             title = data.get('title')
             url = data.get('url')
@@ -71,7 +71,7 @@ class AddFavoriteResource(Resource):
 
           
             favorite= {
-                'fav_id': fav_id,
+                "status" : status,
                 'img': img,
                 'recipeName': recipeName,
                 'title': title,
