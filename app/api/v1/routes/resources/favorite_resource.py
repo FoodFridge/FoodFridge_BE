@@ -4,7 +4,6 @@ from firebase_admin import auth, initialize_app, credentials
 from app.core.firebase import initialize_firebase_app, firestore
 # import logging
 
-
 class FavoriteResourceByUser(Resource):
     def get(self, user_id):
         try:
@@ -26,7 +25,7 @@ class FavoriteResourceByUser(Resource):
                 print('data', data)
                 # Filter data based on the condition (alph_val equals "Carb")
                 filtered_data = [
-                    {"fav_id": item.get("fav_id"), "img": item.get("img"), "title": item.get("title"), "recipeName": item.get("recipeName"), 
+                    {"fav_id": item.get("fav_id"), "img": item.get("img"), "title": item.get("title"), "recipeName": item.get("recipeName"),
                      "url": item.get("url")}
                     for item in data if item.get("user_id") == user_id and item.get("status") == "Y"
                 ]
@@ -52,7 +51,7 @@ class FavoriteResourceByUser(Resource):
 
 
 class AddFavoriteResource(Resource):
-    #to do find user id 
+    #to do find user id
     def post(self):
         try:
             db = firestore.client()
@@ -69,7 +68,7 @@ class AddFavoriteResource(Resource):
             collection_ref = db.collection('favorite')
             document_id = collection_ref.document().id
 
-          
+
             favorite= {
                 "status" : status,
                 'img': img,
@@ -80,7 +79,7 @@ class AddFavoriteResource(Resource):
                 # Add more fields as needed
             }
 
-            
+
             collection_ref.document(document_id).set(favorite)
 
             return {"success": f"Document {document_id} added to collection 'Favorite'", "document_id": document_id}
