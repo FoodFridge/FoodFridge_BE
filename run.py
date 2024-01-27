@@ -7,7 +7,7 @@ from app.api.v1.routes.resources.ingredient_resource import IngredientResource, 
 from app.api.v1.routes.resources.favorite_resource import AddFavoriteResource, FavoriteResourceByUser
 from app.api.v1.routes.resources.recipe_resource import GenerateRecipeFromIngredients
 from app.api.v1.routes.resources.google_resource import SearchWithRecipe
-import aws_lambda_wsgi
+import awsgi
 
 app = Flask(__name__)
 api = Api(app)
@@ -16,20 +16,17 @@ api = Api(app)
 initialize_firebase_app()
 
 api.add_resource(AlphaResource, '/api/v1/alpha/<string:type>')
-api.add_resource(IngredientResource, '/api/v1/ingredient/')
+api.add_resource(IngredientResource, '/api/v1/ingredient')
 api.add_resource(IngredientResourceWithCategory, '/api/v1/ingredient/<string:category>')
 api.add_resource(AddFavoriteResource, '/api/v1/favorite')
 api.add_resource(FavoriteResourceByUser, '/api/v1/favorite/<string:user_id>')
-api.add_resource(GenerateRecipeFromIngredients, '/api/v1/GenerateRecipe/')
+api.add_resource(GenerateRecipeFromIngredients, '/api/v1/GenerateRecipe')
 api.add_resource(SearchWithRecipe, '/api/v1/search/<string:recipeName>')
 
 # AWS Lambda handler
 def lambda_handler(event, context):
-    try:
-        import aws_lambda_wsgi
-        return aws_lambda_wsgi.response(app, event, context)
-    except ImportError:
-        pass
+    return awsgi.response(app, event, context)  # Use awsgi to wrap Flask app
+
 
 # Run the application locally if not running on AWS Lambda
 if __name__ == '__main__':

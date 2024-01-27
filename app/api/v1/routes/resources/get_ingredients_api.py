@@ -32,7 +32,13 @@ def get_ingredients():
     except Exception as e:
         return make_response(jsonify({"error": str(e)}), 500)
 
-    return jsonify(data)
+    return return {
+        "statusCode": 200,
+        "headers": {
+            "Content-Type": "application/json"
+        },
+        "body": jsonify(data)
+    }
 
 @app.errorhandler(404)
 def not_found(error):

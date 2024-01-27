@@ -1,7 +1,7 @@
 data "aws_region" "current" {}
 
 output "api_endpoint" {
-  value = "${aws_apigatewayv2_api.api.api_endpoint}/${aws_apigatewayv2_stage.stage.name}/${replace(aws_apigatewayv2_route.route.route_key, "GET /", "")}"
+  value = aws_apigatewayv2_api.api.api_endpoint
 }
 
 output "cloudwatch_log_group_url" {

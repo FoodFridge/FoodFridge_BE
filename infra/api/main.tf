@@ -2,7 +2,7 @@ terraform {
   required_providers {
     aws = {
       source  = "hashicorp/aws"
-      version = "~> 3.0"
+      version = ">= 5.34.0"
     }
   }
 }
@@ -33,7 +33,7 @@ resource "aws_iam_role" "lambda_exec_role" {
 resource "aws_lambda_function" "foodfridge_api_lambda" {
   function_name = "api-lambda"
   handler       = "run.lambda_handler"
-  runtime       = "python3.9"
+  runtime       = "python3.11"
 
   role = aws_iam_role.lambda_exec_role.arn
 
@@ -53,9 +53,13 @@ resource "aws_apigatewayv2_integration" "lambda_integration" {
   integration_type   = "AWS_PROXY"
   integration_method = "POST"
   integration_uri    = aws_lambda_function.foodfridge_api_lambda.invoke_arn
+
+  request_parameters = {
+    "overwrite:path"                   = "$request.path"
+  }
 }
 
-resource "aws_apigatewayv2_route" "route" {
+resource "aws_apigatewayv2_route" "default_route" {
   api_id    = aws_apigatewayv2_api.api.id
   route_key = "$default"
 
@@ -64,7 +68,7 @@ resource "aws_apigatewayv2_route" "route" {
 
 resource "aws_apigatewayv2_stage" "stage" {
   api_id      = aws_apigatewayv2_api.api.id
-  name        = var.environment
+  name        = "prod"
   auto_deploy = true
 }
 
@@ -101,6 +105,5 @@ resource "aws_lambda_permission" "allow_execution_from_apigateway" {
   action        = "lambda:InvokeFunction"
   function_name = aws_lambda_function.foodfridge_api_lambda.function_name
   principal     = "apigateway.amazonaws.com"
-
-  source_arn = "${aws_apigatewayv2_api.api.execution_arn}/*/*"
+  source_arn    = "${aws_apigatewayv2_api.api.execution_arn}/*/*"
 }

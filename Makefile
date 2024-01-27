@@ -41,7 +41,7 @@ upload:
 plan:
 	cd $(INFRA_DIR) && $(TERRAFORM) init && $(TERRAFORM) plan
 
-deploy: upload-to-s3
+deploy: upload
 	cd $(INFRA_DIR) && $(TERRAFORM) apply -auto-approve
 
 destroy:
