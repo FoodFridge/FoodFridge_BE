@@ -38,7 +38,7 @@ resource "aws_lambda_function" "foodfridge_api_lambda" {
   role = aws_iam_role.lambda_exec_role.arn
 
   s3_bucket = "foodfridge-20240127052946263200000001"
-  s3_key    = "lambda.zip"
+  s3_key    = var.lambda_zip_file
 }
 
 # ... (Other resources: aws_apigatewayv2_api, aws_apigatewayv2_integration, etc.)

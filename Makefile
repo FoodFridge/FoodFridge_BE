@@ -23,32 +23,35 @@ build: clean
 	pip install --no-cache-dir pip install google-cloud-firestore -t build/
 
 	# Copy the main script, .env, and firebase credentials into 'build'
-	# Assuming these files are in the same directory as the Makefile
 	cp ./$(MAIN_SCRIPT) ./build
 	cp ./$(ENV_FILE) ./build
 	cp ./$(FIREBASE_CRED) ./build
 	cp -r ./$(APP_DIR) ./build
 
-	# Create the lambda.zip file with all contents of 'build'
-	cd build && zip -r ../lambda.zip . && cd ..
+	# Generate ZIP file name with timestamp
+	$(eval TIMESTAMP := $(shell date +"%Y%m%d%H%M%S"))
+	$(eval ZIP_FILE := lambda-$(TIMESTAMP).zip)
+
+	# Create the ZIP file with all contents of 'build'
+	cd build && zip -r ../$(ZIP_FILE) . && cd ..
 
 	# Clean up the 'build' directory
 	rm -rf build/
 
 upload:
-	aws s3 cp lambda.zip s3://$(S3_BUCKET)/lambda.zip
+	aws s3 cp $(ZIP_FILE) s3://$(S3_BUCKET)/$(ZIP_FILE)
 
 plan:
 	cd $(INFRA_DIR) && $(TERRAFORM) init && $(TERRAFORM) plan
 
-deploy: upload
-	cd $(INFRA_DIR) && $(TERRAFORM) apply -auto-approve
+deploy: build upload
+	cd $(INFRA_DIR) && $(TERRAFORM) apply -auto-approve -var "lambda_zip_file=$(ZIP_FILE)"
 
 destroy:
 	cd $(INFRA_DIR) && $(TERRAFORM) destroy -auto-approve
 
 clean:
-	rm -f
+	rm -f lambda-*.zip
 	rm -rf build
 
-all: install build plan deploy
+all: install deploy
