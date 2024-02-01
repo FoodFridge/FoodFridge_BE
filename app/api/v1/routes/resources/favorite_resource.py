@@ -83,7 +83,7 @@ class AddFavoriteResource(Resource):
                     "status": "1",
                     "message": "Data updated successfully",
             }
-            return response,200
+            return response, 200
         
 
         except Exception as e:
