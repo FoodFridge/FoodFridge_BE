@@ -32,7 +32,7 @@ class FavoriteResourceByUser(Resource):
                 # Filter data based on the condition (alph_val equals "Carb")
                 filtered_data = [
                     {"favId": item.get("document_id"), "img": item["data"].get("img"), "title": item["data"].get("title"), "recipeName": item["data"].get("recipe_name"),
-                     "url": item["data"].get("url"),"isFavorite": item["data"].get("status")}
+                     "url": item["data"].get("url"),"isFavorite": item["data"].get("status"),"userId": item["data"].get("user_id")}
                     for item in data 
                     
                 ]
@@ -79,7 +79,12 @@ class AddFavoriteResource(Resource):
             # Update the 'status' field to a new value (e.g., 'Y' for 'Yes')
             document_ref.update({'status': isFavorite})
 
-            return {"success": f"Document {favId} added to collection 'Favorite'", "document_id": favId}
+            response = {
+                    "status": "1",
+                    "message": "Data updated successfully",
+            }
+            return response,200
+        
 
         except Exception as e:
             # Handle the exception and return an appropriate response

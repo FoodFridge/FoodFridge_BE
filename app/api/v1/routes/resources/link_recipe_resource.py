@@ -75,7 +75,7 @@ class LinkRecipeResource(Resource):
                             'img': src_value,
                             'recipe_name': recipe_name,
                             'title': title,
-                            'url': url,
+                            'url': link,
                             'user_id': userId,
                             # Add more fields as needed
                         }
@@ -91,10 +91,14 @@ class LinkRecipeResource(Resource):
 
                         # set data response
                         result_dict = {
-                            'fav_id': document_ref.id,
+                            'favId': document_ref.id,
+                            'img': src_value,
                             'title': title,
-                            'link': link,
-                            'img': src_value
+                            'recipeName': recipe_name,
+                            'url': link,
+                            'isFavorite': 'N',
+                            'userId': userId
+                            
                         }
 
                         # Append the dictionary to the list
