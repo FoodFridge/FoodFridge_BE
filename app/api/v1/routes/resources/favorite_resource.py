@@ -2,7 +2,11 @@ from flask import request, jsonify
 from flask_restful import Resource
 from firebase_admin import auth, initialize_app, credentials
 from app.core.firebase import initialize_firebase_app, firestore
+import secrets
+import random
+import string
 # import logging
+
 
 class FavoriteResourceByUser(Resource):
     def get(self, user_id,is_favorite):
@@ -58,33 +62,104 @@ class FavoriteResourceByUser(Resource):
 
 
 class AddFavoriteResource(Resource):
-    #to do find user id
+    #to do find user id 
     def post(self):
         try:
             # parameter json
             data = request.get_json()
 
-            favId = data.get('favId')
-            isFavorite = data.get('isFavorite')
+            img = data.get('img')
+            status = data.get('status')
+            recipeName = data.get('recipeName')
+            title = data.get('title')
+            url = data.get('url')
+            user_id = data.get('user_id')
+            print(recipeName)
+            collection_ref = db.collection('favorite')
+            document_id = collection_ref.document().id
+
+          
+            favorite= {
+                "status" : status,
+                'img': img,
+                'recipeName': recipeName,
+                'title': title,
+                'url': url,
+                'user_id': user_id,
+                # Add more fields as needed
+            }
+
             
-            # Create a Firestore client
+            collection_ref.document(document_id).set(favorite)
+
+            return {"success": f"Document {document_id} added to collection 'Favorite'", "document_id": document_id}
+
+        except Exception as e:
+            # Handle the exception and return an appropriate response
+            error_message = f"An error occurred: {str(e)}"
+            return {"error": error_message}, 500
+
+        #จำเป็นไหม? ส่ง Document Id ยังไง และ ถ้าไม่ใช้ fav id ให้กลับไปแก้
+class FavoriteResourceByFavID(Resource):
+    def get(self, user_id, fav_id):
+        try:
             db = firestore.client()
 
-            # Specify the collection reference
             collection_ref = db.collection('favorite')
+            docs = collection_ref.stream()
 
-            # Reference to the specific document
-            document_ref = collection_ref.document(favId)
+            data = []
+            for doc in docs:
+                data.append(doc.to_dict())
 
-            # Update the 'status' field to a new value (e.g., 'Y' for 'Yes')
-            document_ref.update({'status': isFavorite})
+            if data:
 
-            response = {
+                filtered_data = [
+                    {"img": item.get("img"), "title": item.get("title"), "recipeName": item.get("recipeName"), "status": item.get("status") , 
+                     "url": item.get("url")}
+                    for item in data if item.get("user_id") == user_id and item.get("fav_id") == fav_id
+                ]
+
+                print(filtered_data)
+
+                response = {
                     "status": "1",
-                    "message": "Data updated successfully",
-            }
+                    "message": "Data retrieved successfully",
+                    "data": filtered_data
+                }
+            else:
+                # If no data is present, return a response with a message
+                response = {
+                    "status": "0",
+                    "message": "No data available",
+                    "data": []
+                }
             return response, 200
         
+        except Exception as e:
+            # Handle the exception and return an appropriate response
+            error_message = f"An error occurred: {str(e)}"
+            return {"error": error_message}, 500
+        
+class ChangeFavoriteResource(Resource):
+    def put(self):
+        try:
+            db = firestore.client()
+
+            data = request.get_json()
+
+            document_id = data.get('document_id')
+
+            if not document_id:
+                return {"error": "Missing required parameters"}, 400
+            
+            collection_name = 'favorite'
+            doc_ref = db.collection(collection_name).document(document_id)
+            current_status = doc_ref.get().get('status')
+            new_status = 'N' if current_status == 'Y' else 'Y'
+
+            doc_ref.update({'status': new_status})
+            return {"success": f"Favorite status toggled for document ID {document_id}. New status: {new_status}"}
 
         except Exception as e:
             # Handle the exception and return an appropriate response

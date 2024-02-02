@@ -1,91 +1,88 @@
-# from flask import request, jsonify
-# from flask_restful import Resource
-# from firebase_admin import auth, initialize_app, credentials
-# from app.core.firebase import initialize_firebase_app, firestore
-# # import logging
+import json
+from flask import Flask, request, jsonify
+from flask_restful import Resource
+from app.core.firebase import initialize_firebase_app, firestore
+from datetime import datetime
+import logging
+# from google.cloud.firestore_v1 import DatetimeWithNanoseconds
+
+app = Flask(__name__)
 
 
-# class FavoriteResourceByUser(Resource):
-#     def get(self, user_id):
-#         try:
-#             # # Use initialize_firebase_app() in your code
-#             # initialize_firebase_app()
+class CustomJSONEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, datetime):
+            return obj.isoformat()
+        return super().default(obj)
 
-#             db = firestore.client()
+app.json_encoder = CustomJSONEncoder
 
-#             collection_ref = db.collection('favorite')
-#             docs = collection_ref.stream()
+class PantryResourceByUser(Resource):
+    def get(self, user_id):
+        try:
+            db = firestore.Client()
+            collection_ref = db.collection('pantry')
+            docs = collection_ref.stream()
 
-#             data = []
-#             for doc in docs:
-#                 data.append(doc.to_dict())
+            data = []
+            for doc in docs:
+                doc_data = doc.to_dict()
+                if 'date' in doc_data:
+                    doc_data['date'] = doc_data['date'].isoformat()  # Convert to ISO format
+                data.append(doc_data)
 
-#             response = {}
-#             if data:
-#                 # If data is present, return a success response
-#                 print('data', data)
-#                 # Filter data based on the condition (alph_val equals "Carb")
-#                 filtered_data = [
-#                     {"fav_id": item.get("fav_id"), "img": item.get("img"), "title": item.get("title"), "recipeName": item.get("recipeName"), 
-#                      "url": item.get("url")}
-#                     for item in data if item.get("user_id") == user_id
-#                 ]
-#                 print('filtered_data', filtered_data)
-#                 response = {
-#                     "status": "1",
-#                     "message": "Data retrieved successfully",
-#                     "data": filtered_data
-#                 }
-#             else:
-#                 # If no data is present, return a response with a message
-#                 response = {
-#                     "status": "0",
-#                     "message": "No data available",
-#                     "data": []
-#                 }
-#             return response, 200
+            if data:
+                # If data is present, return a success response
+                filtered_data = [
+                    {"date": item.get("date"), "pantryName": item.get("pantryName")}
+                    for item in data if item.get("user_id") == user_id
+                ]
+                response = {
+                    "status": "1",
+                    "message": "Data retrieved successfully",
+                    "data": filtered_data
+                }
+            else:
+                # If no data is present, return a response with a message
+                response = {
+                    "status": "0",
+                    "message": "No data available",
+                    "data": []
+                }
+            print(response["data"])
+            return response, 200
 
-#         except Exception as e:
-#             # Handle the exception and return an appropriate response
-#             error_message = f"An error occurred: {str(e)}"
-#             return {"error": error_message}, 500
+        except Exception as e:
+            # Handle the exception and return an appropriate response
+            error_message = f"An error occurred: {str(e)}"
+            return {"error": error_message}, 500
 
 
-# class AddFavoriteResource(Resource):
+class AddPantryResource(Resource):
 
-#     def post(self):
-#         try:
-#             db = firestore.client()
+    def post(self, user_id):
+        try:
+            db = firestore.client()
 
-#             data = request.get_json()
+            data = request.get_json()
 
-#             fav_id = data.get('fav_id')
-#             img = data.get('img')
-#             recipeName = data.get('recipeName')
-#             title = data.get('title')
-#             url = data.get('url')
-#             user_id = data.get('user_id')
-#             print(recipeName)
-#             collection_ref = db.collection('favorite')
-#             document_id = collection_ref.document().id
+            pantryName = data.get('pantryName')
+            collection_ref = db.collection('pantry')
+            document_id = collection_ref.document().id
 
           
-#             favorite= {
-#                 'fav_id': fav_id,
-#                 'img': img,
-#                 'recipeName': recipeName,
-#                 'title': title,
-#                 'url': url,
-#                 'user_id': user_id,
-#                 # Add more fields as needed
-#             }
+            pantry= {
+                'date': datetime.now(),
+                'pantryName': pantryName,
+                'user_id': user_id,
+            }
 
             
-#             collection_ref.document(document_id).set(favorite)
+            collection_ref.document(document_id).set(pantry)
 
-#             return {"success": f"Document {document_id} added to collection 'Favorite'", "document_id": document_id}
+            return {"success": f"Document {document_id} added to collection 'Pantry'", "document_id": document_id}
 
-#         except Exception as e:
-#             # Handle the exception and return an appropriate response
-#             error_message = f"An error occurred: {str(e)}"
-#             return {"error": error_message}, 500
+        except Exception as e:
+            # Handle the exception and return an appropriate response
+            error_message = f"An error occurred: {str(e)}"
+            return {"error": error_message}, 500
