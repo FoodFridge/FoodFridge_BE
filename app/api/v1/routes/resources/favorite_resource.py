@@ -7,31 +7,27 @@ import random
 import string
 # import logging
 
-def generate_random_string(length=8):
-    return secrets.token_hex(length // 2)
-
-def generate_random_integer(min_value=1, max_value=100):
-    return random.randint(min_value, max_value)
-
-def generate_random_string_and_integer():
-    random_string = generate_random_string()
-    random_integer = generate_random_integer()
-    return f"{random_string}_{random_integer}"
 
 class FavoriteResourceByUser(Resource):
-    def get(self, user_id):
+    def get(self, user_id,is_favorite):
         try:
-            # # Use initialize_firebase_app() in your code
-            # initialize_firebase_app()
 
             db = firestore.client()
 
             collection_ref = db.collection('favorite')
-            docs = collection_ref.stream()
+            # docs = collection_ref.stream()
+
+            # Construct the query
+            query = collection_ref.where('status', '==', is_favorite).where('user_id', '==', user_id)
+            docs = query.stream()
 
             data = []
             for doc in docs:
-                data.append(doc.to_dict())
+                doc_data = doc.to_dict()
+                doc_id = doc.id  # Get the document_id
+    
+                # Append the document_id along with the data to the 'data' list
+                data.append({"document_id": doc_id, "data": doc_data})
 
             response = {}
             if data:
@@ -39,9 +35,10 @@ class FavoriteResourceByUser(Resource):
                 print('data', data)
                 # Filter data based on the condition (alph_val equals "Carb")
                 filtered_data = [
-                    {"fav_id": item.get("fav_id"), "img": item.get("img"), "title": item.get("title"), "recipeName": item.get("recipeName"), 
-                     "url": item.get("url")}
-                    for item in data if item.get("user_id") == user_id and item.get("status") == "Y"
+                    {"favId": item.get("document_id"), "img": item["data"].get("img"), "title": item["data"].get("title"), "recipeName": item["data"].get("recipe_name"),
+                     "url": item["data"].get("url"),"isFavorite": item["data"].get("status"),"userId": item["data"].get("user_id")}
+                    for item in data 
+                    
                 ]
                 print('filtered_data', filtered_data)
                 response = {
@@ -65,23 +62,25 @@ class FavoriteResourceByUser(Resource):
 
 
 class AddFavoriteResource(Resource):
-    def post(self, user_id):
+    #to do find user id 
+    def post(self):
         try:
-            db = firestore.client()
-
+            # parameter json
             data = request.get_json()
 
             img = data.get('img')
+            status = data.get('status')
             recipeName = data.get('recipeName')
             title = data.get('title')
             url = data.get('url')
+            user_id = data.get('user_id')
             print(recipeName)
             collection_ref = db.collection('favorite')
             document_id = collection_ref.document().id
+
           
             favorite= {
-                "status" : "N",
-                "fav_id" : generate_random_string_and_integer(),
+                "status" : status,
                 'img': img,
                 'recipeName': recipeName,
                 'title': title,
@@ -90,6 +89,7 @@ class AddFavoriteResource(Resource):
                 # Add more fields as needed
             }
 
+            
             collection_ref.document(document_id).set(favorite)
 
             return {"success": f"Document {document_id} added to collection 'Favorite'", "document_id": document_id}
