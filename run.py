@@ -7,6 +7,7 @@ from app.api.v1.routes.resources.ingredient_resource import IngredientResource ,
 from app.api.v1.routes.resources.favorite_resource import AddFavoriteResource, FavoriteResourceByUser
 from app.api.v1.routes.resources.recipe_resource import GenerateRecipeFromIngredients
 from app.api.v1.routes.resources.link_recipe_resource import LinkRecipeResource
+import awsgi
 
 app = Flask(__name__)
 api = Api(app)
@@ -22,5 +23,10 @@ api.add_resource(FavoriteResourceByUser, '/api/v1/favorite/<string:user_id>/<str
 api.add_resource(GenerateRecipeFromIngredients, '/api/v1/GenerateRecipe/')
 api.add_resource(LinkRecipeResource, '/api/v1/LinkRecipe')
 
+# AWS Lambda handler
+def lambda_handler(event, context):
+    return awsgi.response(app, event, context)  # Use awsgi to wrap Flask app
+
+# Run the application locally if not running on AWS Lambda
 if __name__ == '__main__':
     app.run(debug=True)
