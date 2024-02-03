@@ -6,7 +6,7 @@ from app.api.v1.routes.resources.alpha_resource import AlphaResource
 from app.api.v1.routes.resources.ingredient_resource import IngredientResource ,IngredientResourceWithCategory
 from app.api.v1.routes.resources.favorite_resource import AddFavoriteResource, FavoriteResourceByUser
 from app.api.v1.routes.resources.recipe_resource import GenerateRecipeFromIngredients
-from app.api.v1.routes.resources.google_resource import SearchWithRecipe
+from app.api.v1.routes.resources.link_recipe_resource import LinkRecipeResource
 
 app = Flask(__name__)
 api = Api(app)
@@ -18,9 +18,9 @@ api.add_resource(AlphaResource, '/api/v1/alpha/<string:type>')
 api.add_resource(IngredientResource, '/api/v1/ingredient')
 api.add_resource(IngredientResourceWithCategory, '/api/v1/ingredient/<string:category>')
 api.add_resource(AddFavoriteResource, '/api/v1/favorite')
-api.add_resource(FavoriteResourceByUser, '/api/v1/favorite/<string:user_id>')
+api.add_resource(FavoriteResourceByUser, '/api/v1/favorite/<string:user_id>/<string:is_favorite>')
 api.add_resource(GenerateRecipeFromIngredients, '/api/v1/GenerateRecipe/')
-api.add_resource(SearchWithRecipe, '/api/v1/search/<string:recipeName>')
+api.add_resource(LinkRecipeResource, '/api/v1/LinkRecipe')
 
 if __name__ == '__main__':
     app.run(debug=True)

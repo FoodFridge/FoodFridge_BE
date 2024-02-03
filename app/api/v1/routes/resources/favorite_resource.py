@@ -18,26 +18,29 @@ class FavoriteResourceByUser(Resource):
                 doc_id = doc.id  # Get the document_id
                 # Append the document_id along with the data to the 'data' list
                 data.append({"document_id": doc_id, "data": doc_data})
+            
             response = {}
             if data:
-                # If data is present, return a success response
-                print('data', data)
-                # Filter data based on the condition (alph_val equals "Carb")
-                filtered_data = [
-                    {"favId": item.get("document_id"),
-                     "img": item["data"].get("img"),
-                     "title": item["data"].get("title"),
-                    "recipeName": item["data"].get("recipe_name"),
-                     "url": item["data"].get("url"),
-                     "isFavorite": item["data"].get("status"),
-                     "userId": item["data"].get("user_id")}
-                    for item in data
-                ]
-                print('filtered_data', filtered_data)
+                transformed_data = {}
+                for item in data:
+                    recipe_name = item["data"].get("recipe_name")
+                    if recipe_name:
+                    # Exclude 'recipeName' from the value part
+                        recipe_name = item["data"].get("recipe_name")
+                        value = {
+                            "favId": item.get("document_id"),
+                            "img": item["data"].get("img"),
+                            "title": item["data"].get("title"),
+                            "url": item["data"].get("url"),
+                            "isFavorite": item["data"].get("status"),
+                            "userId": item["data"].get("user_id")
+                            }
+                        transformed_data.setdefault(recipe_name, []).append(value)
+
                 response = {
                     "status": "1",
                     "message": "Data retrieved successfully",
-                    "data": filtered_data
+                    "data": transformed_data 
                 }
             else:
                 # If no data is present, return a response with a message
@@ -51,6 +54,7 @@ class FavoriteResourceByUser(Resource):
             # Handle the exception and return an appropriate response
             error_message = f"An error occurred: {str(e)}"
             return {"error": error_message}, 500
+        
 class AddFavoriteResource(Resource):
     #to do find user id
     def post(self):
