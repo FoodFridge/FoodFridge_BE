@@ -13,7 +13,7 @@ class LinkRecipeResource(Resource):
             # parameter json
             data = request.get_json()
 
-            userId = data.get('userId')
+            user_id = data.get('userId')
             recipe_name = data.get('recipeName')
         
             # Load environment variables from .env file
@@ -47,6 +47,19 @@ class LinkRecipeResource(Resource):
                 # 
                 db = firestore.client()
                 
+                collection_ref = db.collection('favorite')
+                # docs = collection_ref.stream()
+
+                # Construct the query
+                query = collection_ref.where('recipe_name', '==', recipe_name).where('user_id', '==', user_id)
+                docs = query.stream()
+                dataFav = []
+                for doc in docs:
+                    doc_data = doc.to_dict()
+                    dataFav.append(doc_data)
+
+                
+
                 # Create a batch object
                 batch = db.batch()
 
@@ -56,71 +69,102 @@ class LinkRecipeResource(Resource):
                     for item in response_json['items']:
                         # Access and print relevant information
                         title = item.get('title', '')
-                        link = item.get('link', '')
-                        snippet = item.get('snippet', '')
-                        
-                        # Access the 'pagemap' dictionary within the item
-                        pagemap = item.get('pagemap', {})
-                        
-                        # Access the 'thumbnail' list within the pagemap
-                        cse_image = pagemap.get('cse_image', [])
 
-                        # Iterate through each thumbnail in the list
-                        for thumbnail in cse_image:
-                            # Access the 'src' value within the thumbnail
-                            src_value = thumbnail.get('src', '')
-
-                        favorite= {
-                            "status" : 'N',
-                            'img': src_value,
-                            'recipe_name': recipe_name,
-                            'title': title,
-                            'url': link,
-                            'user_id': userId,
-                            # Add more fields as needed
-                        }
-
-                        # Reference to the 'favorite' collection
-                        collection_ref = db.collection('favorite')
-
-                        # Create a new document reference in the batch
-                        document_ref = collection_ref.document()
-
-                        # Set data for the document in the batch
-                        batch.set(document_ref, favorite)
-
-                        # set data response
-                        result_dict = {
-                            'favId': document_ref.id,
-                            'img': src_value,
-                            'title': title,
-                            'recipeName': recipe_name,
-                            'url': link,
-                            'isFavorite': 'N',
-                            'userId': userId
+                        # Check if the title is not present in dataFav
+                        if all(doc.get('title', '') != title for doc in dataFav):
+                            link = item.get('link', '')
+                            snippet = item.get('snippet', '')
                             
-                        }
+                            # Check if the link is an HTTP link before inserting
+                            if link.startswith('http://') or link.startswith('https://'):
+                                # Access the 'pagemap' dictionary within the item
+                                pagemap = item.get('pagemap', {})
 
-                        # Append the dictionary to the list
-                        search_results.append(result_dict)
+                                # Access the 'thumbnail' list within the pagemap
+                                cse_image = pagemap.get('cse_image', [])
+
+                                # Initialize img variable
+                                img = ''
+
+                                # Iterate through each thumbnail in the list
+                                for thumbnail in cse_image:
+                                    # Access the 'src' value within the thumbnail
+                                    img = thumbnail.get('src', '')
+
+                                favorite = {
+                                    "status": 'N',
+                                    'img': img,
+                                    'recipe_name': recipe_name,
+                                    'title': title,
+                                    'url': link,
+                                    'user_id': user_id,
+                                    # Add more fields as needed
+                                }
+
+                                # Reference to the 'favorite' collection
+                                collection_ref = db.collection('favorite')
+
+                                # Create a new document reference in the batch
+                                document_ref = collection_ref.document()
+
+                                # Set data for the document in the batch
+                                batch.set(document_ref, favorite)
 
                     # Commit the batch
                     batch.commit()
 
+                db = firestore.client()
+                collection_ref = db.collection('favorite')
+
+                # Construct the query using filter keyword argument
+                query = collection_ref.where('recipe_name', '==', recipe_name).where('user_id', '==', user_id)
+
+                # Alternatively, you can use filter keyword argument directly
+                # query = collection_ref.where(recipe_name='recipe_name', user_id='user_id')
+
+                docs = query.stream()
+                dataResult = []
+
+                for doc in docs:
+                    doc_data = doc.to_dict()
+                    doc_id = doc.id  # Get the document_id
+                    # Append the document_id along with the data to the 'data' list
+                    dataResult.append({"document_id": doc_id, "data": doc_data})
+
+                response = {}
+
+                if dataResult:
+                    transformed_data = []
+
+                    for item in dataResult:
+                        # print(item)
+                        value = {
+                            "favId": item.get("document_id"),
+                            "img": item["data"].get("img"),
+                            "title": item["data"].get("title"),
+                            "url": item["data"].get("url"),
+                            "isFavorite": item["data"].get("status"),
+                            "userId": item["data"].get("user_id")
+                        }
+                        transformed_data.append(value)
+
                     response = {
                         "status": "1",
                         "message": "Data retrieved successfully",
-                        "data": search_results
+                        "data": transformed_data
                     }
-
-                    return response, 200
                 else:
+                    # If no data is present, return a response with a message
                     response = {
                         "status": "0",
                         "message": "No data available",
                         "data": []
-                        }
-                    return response, 200
+                    }
+
+                return response, 200
+
+
+        
             else:
                 
                 print(f"Error: {status_code}")
