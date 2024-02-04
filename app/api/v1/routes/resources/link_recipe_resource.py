@@ -76,7 +76,7 @@ class LinkRecipeResource(Resource):
                             snippet = item.get('snippet', '')
                             
                             # Check if the link is an HTTP link before inserting
-                            if link.startswith('http://') or link.startswith('https://'):
+                            if link.startswith('https://'):
                                 # Access the 'pagemap' dictionary within the item
                                 pagemap = item.get('pagemap', {})
 
