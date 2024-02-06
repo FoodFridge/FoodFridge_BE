@@ -20,7 +20,7 @@ api.add_resource(IngredientResource, '/api/v1/ingredient')
 api.add_resource(IngredientResourceWithCategory, '/api/v1/ingredient/<string:category>')
 api.add_resource(AddFavoriteResource, '/api/v1/favorite')
 api.add_resource(FavoriteResourceByUser, '/api/v1/favorite/<string:user_id>/<string:is_favorite>')
-api.add_resource(GenerateRecipeFromIngredients, '/api/v1/GenerateRecipe/')
+api.add_resource(GenerateRecipeFromIngredients, '/api/v1/GenerateRecipe')
 api.add_resource(LinkRecipeResource, '/api/v1/LinkRecipe')
 
 # AWS Lambda handler

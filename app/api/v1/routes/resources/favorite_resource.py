@@ -23,24 +23,25 @@ class FavoriteResourceByUser(Resource):
             if data:
                 transformed_data = {}
                 for item in data:
-                    recipe_name = item["data"].get("recipe_name")
+                    recipe_name = item.get("data", {}).get("recipe_name")
                     if recipe_name:
                     # Exclude 'recipeName' from the value part
-                        recipe_name = item["data"].get("recipe_name")
                         value = {
-                            "favId": item.get("document_id"),
-                            "img": item["data"].get("img"),
-                            "title": item["data"].get("title"),
-                            "url": item["data"].get("url"),
-                            "isFavorite": item["data"].get("status"),
-                            "userId": item["data"].get("user_id")
-                            }
-                        transformed_data.setdefault(recipe_name, []).append(value)
+                             "favId": item.get("document_id"),
+                             "img": item.get("data", {}).get("img"),
+                             "title": item.get("data", {}).get("title"),
+                             "url": item.get("data", {}).get("url"),
+                             "isFavorite": item.get("data", {}).get("status"),
+                             "userId": item.get("data", {}).get("user_id")
+                         }
+                        transformed_data.setdefault(recipe_name,[]).append(value)
+                # Creating the final response structure
+                response_data = [{"recipeName": key, "recipeLinks": value} for key, value in transformed_data.items()]
 
                 response = {
                     "status": "1",
                     "message": "Data retrieved successfully",
-                    "data": transformed_data 
+                    "data": response_data
                 }
             else:
                 # If no data is present, return a response with a message
