@@ -78,19 +78,50 @@ class AddPantryResource(Resource):
             collection_ref = db.collection('pantry')
             document_id = collection_ref.document().id
 
-          
             pantry= {
                 'date': datetime.now(),
                 'pantryName': pantryName,
                 'user_id': user_id,
             }
 
-            
             collection_ref.document(document_id).set(pantry)
 
             return {"success": f"Document {document_id} added to collection 'Pantry'", "document_id": document_id}
 
         except Exception as e:
             # Handle the exception and return an appropriate response
+            error_message = f"An error occurred: {str(e)}"
+            return {"error": error_message}, 500
+
+class EditPantryResource(Resource):
+
+    def put(self, doc_id):
+        try:
+             # Receive the updated pantry data from the request
+            updated_data = request.json
+
+            # Validate the data if necessary
+            
+            # Initialize Firestore client
+            db = firestore.Client()
+            
+            # Get reference to 'pantry' collection
+            doc_ref = db.collection('pantry').document(doc_id)
+            
+            # Update the pantry data for the given user_id
+
+            doc_ref.update(updated_data)
+
+             # Return a success response
+            response = {
+                "status": "success",
+                "message": "Document data updated successfully"
+            }
+            return response, 200
+            
+            return response, 200  # 200 OK status code
+
+        except Exception as e:
+            # Handle exceptions
             error_message = f"An error occurred: {str(e)}"
             return {"error": error_message}, 500
