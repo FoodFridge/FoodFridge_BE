@@ -28,20 +28,28 @@ class PantryResourceByUser(Resource):
             for doc in docs:
                 doc_data = doc.to_dict()
                 if 'date' in doc_data:
-                    doc_data['date'] = doc_data['date'].isoformat()  # Convert to ISO format
+                    doc_data['date'] = doc_data['date'].date().isoformat()
                 data.append(doc_data)
-
+            # print(data)
             if data:
-                # If data is present, return a success response
-                filtered_data = [
-                    {"date": item.get("date"), "pantryName": item.get("pantryName")}
-                    for item in data if item.get("user_id") == user_id
-                ]
+                filtered_data = [item for item in data if item.get("user_id") == user_id]
+                print(filtered_data)
+                transformed_data = {}
+                for item in filtered_data:
+                    date = item.get("date")
+                    if date:
+                        value = {
+                                "date": date,  # Assign the correct date value
+                                "pantryName": item.get("pantryName")
+                            }
+                        transformed_data.setdefault(date, []).append(value)
+
                 response = {
                     "status": "1",
                     "message": "Data retrieved successfully",
-                    "data": filtered_data
+                    "data": transformed_data
                 }
+                
             else:
                 # If no data is present, return a response with a message
                 response = {
