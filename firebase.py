@@ -16,5 +16,5 @@ firebase_admin.initialize_app(cred)
 email = "kktesr@gmail.com"
 password = "12346"
 
-user = auth.ceate_user_with_email_and_password(emai,password)
+user = auth.ceate_user_with_email_and_password(email,password)
 print(user)

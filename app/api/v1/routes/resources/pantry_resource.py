@@ -42,15 +42,17 @@ class PantryResourceByUser(Resource):
                     date = item.get("date")
                     if date:
                         value = {
-                                "date": date,  # Assign the correct date value
+                                "pantry_id": item.get("pantry_id"),
                                 "pantryName": item.get("pantryName")
                             }
                         transformed_data.setdefault(date, []).append(value)
 
+                response_data = [{"date": key, "pantryInfo": value} for key, value in transformed_data.items()]
+
                 response = {
                     "status": "1",
                     "message": "Data retrieved successfully",
-                    "data": transformed_data
+                    "data": response_data
                 }
                 
             else:
