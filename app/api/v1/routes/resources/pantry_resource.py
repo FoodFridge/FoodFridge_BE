@@ -4,10 +4,13 @@ from flask_restful import Resource
 from app.core.firebase import initialize_firebase_app, firestore
 from datetime import datetime
 import logging
+import uuid
 # from google.cloud.firestore_v1 import DatetimeWithNanoseconds
 
 app = Flask(__name__)
 
+random_uuid = uuid.uuid4()
+random_uuid_str = str(random_uuid)
 
 class CustomJSONEncoder(json.JSONEncoder):
     def default(self, obj):
@@ -81,6 +84,8 @@ class AddPantryResource(Resource):
             pantry= {
                 'date': datetime.now(),
                 'pantryName': pantryName,
+                'pantry_id': random_uuid_str,
+                'ingredient_type_code': '08',
                 'user_id': user_id,
             }
 

@@ -39,13 +39,13 @@ class IngredientResource(Resource):
 
             for doc in docs2:
                 doc_dict2 = doc.to_dict()
-                pantries = {
+                pantrie = {
                     "user_id": doc_dict2.get("user_id"),
                     "ingredient_id": doc_dict2.get("pantry_id"),
                     "ingredient_name": doc_dict2.get("pantryName"),
                     "ingredient_type_code": doc_dict2.get("ingredient_type_code"),
                 }
-                data.append(pantries)
+                data.append(pantrie)
 
             response = {}
             if data:
