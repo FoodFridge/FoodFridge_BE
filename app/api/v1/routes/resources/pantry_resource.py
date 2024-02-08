@@ -130,3 +130,28 @@ class EditPantryResource(Resource):
             # Handle exceptions
             error_message = f"An error occurred: {str(e)}"
             return {"error": error_message}, 500
+        
+
+class DeletePantryResource(Resource):
+    def delete(self, doc_id):
+        try:
+            # Initialize Firestore client
+            db = firestore.Client()
+
+            # Get reference to the document in the 'pantry' collection
+            doc_ref = db.collection('pantry').document(doc_id)
+
+            # Delete the document from Firestore
+            doc_ref.delete()
+
+            # Return a success response
+            response = {
+                "status": "success",
+                "message": f"Document with ID {doc_id} deleted successfully"
+            }
+            return response, 200
+
+        except Exception as e:
+            # Handle exceptions
+            error_message = f"An error occurred: {str(e)}"
+            return {"error": error_message}, 500
