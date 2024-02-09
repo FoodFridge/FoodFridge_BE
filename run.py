@@ -8,7 +8,7 @@ from app.api.v1.routes.resources.favorite_resource import AddFavoriteResource, F
 from app.api.v1.routes.resources.recipe_resource import GenerateRecipeFromIngredients
 from app.api.v1.routes.resources.link_recipe_resource import LinkRecipeResource
 from app.api.v1.routes.resources.pantry_resource import PantryResourceByUser, AddPantryResource, EditPantryResource, DeletePantryResource
-# import awsgi
+import awsgi
 
 app = Flask(__name__)
 api = Api(app)
