@@ -49,10 +49,13 @@ class PantryResourceByUser(Resource):
 
                 response_data = [{"date": key, "pantryInfo": value} for key, value in transformed_data.items()]
 
+
+                sorted_response_data = sorted(response_data, key=lambda x: x['date'])
+
                 response = {
                     "status": "1",
                     "message": "Data retrieved successfully",
-                    "data": response_data
+                    "data": sorted_response_data
                 }
                 
             else:
@@ -125,8 +128,6 @@ class EditPantryResource(Resource):
                 "message": "Document data updated successfully"
             }
             return response, 200
-            
-            return response, 200  # 200 OK status code
 
         except Exception as e:
             # Handle exceptions
