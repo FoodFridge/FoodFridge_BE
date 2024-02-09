@@ -1,15 +1,16 @@
+import os
 from flask import jsonify, request
 from flask_restful import Resource
 import requests
 from app.core.firebase import initialize_firebase_app, firestore
 import uuid
 
-api_key = "AIzaSyBq5lsZOZoMmhdMMI2CLJsLxwH-QpEwirk"
 
 active_sessions = set()
 
 class Login_up_with_email_and_password(Resource):
     def post(self):
+        api_key = os.getenv("api_key")
         
         endpoint = f"https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key={api_key}"
         # Assuming you're using JSON data for login credentials
@@ -52,7 +53,6 @@ class Logout(Resource):
         print('sessio',active_sessions)
         print('id',idToken)
         # Firebase Authentication REST API endpoint for revoking tokens
-        # endpoint = f"https://identitytoolkit.googleapis.com/v1/accounts:revokeRefreshToken?key={api_key}"
         if idToken in active_sessions:
         # Invalidate the session or token
             active_sessions.remove(idToken)
@@ -60,13 +60,14 @@ class Logout(Resource):
             # Check if the request was successful
             return 'sign out successfull'
         else:
-                # Token revocation failed, return error response
+            # Token revocation failed, return error response
             print(f"Failed to sign out")
             return "Failed to sign out"
 
 
 class Sign_up_with_email_and_password(Resource):
     def post(self):
+        api_key = os.getenv("api_key")
 
         endpoint = f"https://identitytoolkit.googleapis.com/v1/accounts:signUp?key={api_key}"
 
@@ -92,7 +93,14 @@ class Sign_up_with_email_and_password(Resource):
 
             # Send POST request
             response = requests.post(endpoint, json=data)
+            
+            data = response.json()
 
+            idToken = data.get('idToken')
+            print(data.get('idToken'))
+
+            if idToken not in active_sessions:
+                active_sessions.add(idToken)
             
             user_ref = db.collection('users').document()
             user_ref.set({
