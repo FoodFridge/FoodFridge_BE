@@ -23,7 +23,7 @@ app.json_encoder = CustomJSONEncoder
 class PantryResourceByUser(Resource):
     def get(self, user_id):
         try:
-            db = firestore.Client()
+            db = firestore.client()
             collection_ref = db.collection('pantry')
             docs = collection_ref.stream()
 
@@ -110,7 +110,7 @@ class EditPantryResource(Resource):
             # Validate the data if necessary
             
             # Initialize Firestore client
-            db = firestore.Client()
+            db = firestore.client()
             
             # Get reference to 'pantry' collection
             doc_ref = db.collection('pantry').document(doc_id)
@@ -138,7 +138,7 @@ class DeletePantryResource(Resource):
     def delete(self, pantry_id):
         try:
             # Initialize Firestore client
-            db = firestore.Client()
+            db = firestore.client()
 
             # Query the 'pantry' collection to find documents with matching user_id
             query_ref = db.collection('pantry').where("pantry_id", "==", pantry_id)

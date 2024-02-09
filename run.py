@@ -8,7 +8,8 @@ from app.api.v1.routes.resources.favorite_resource import AddFavoriteResource, F
 from app.api.v1.routes.resources.recipe_resource import GenerateRecipeFromIngredients
 from app.api.v1.routes.resources.link_recipe_resource import LinkRecipeResource
 from app.api.v1.routes.resources.pantry_resource import PantryResourceByUser, AddPantryResource, EditPantryResource, DeletePantryResource
-import awsgi
+from app.api.v1.routes.resources.users_login import Login, Logout, Signup
+# import awsgi
 
 app = Flask(__name__)
 api = Api(app)
@@ -27,7 +28,9 @@ api.add_resource(PantryResourceByUser, '/api/v1/pantry/<string:user_id>')
 api.add_resource(AddPantryResource, '/api/v1/pantry/add/<string:user_id>')
 api.add_resource(EditPantryResource, '/api/v1/pantry/edit/<string:doc_id>')
 api.add_resource(DeletePantryResource, '/api/v1/pantry/delete/<string:pantry_id>')
-
+api.add_resource(Login, '/login')
+api.add_resource(Logout, '/logout')
+api.add_resource(Signup, '/signup')
 # AWS Lambda handler
 def lambda_handler(event, context):
     return awsgi.response(app, event, context)  # Use awsgi to wrap Flask app
