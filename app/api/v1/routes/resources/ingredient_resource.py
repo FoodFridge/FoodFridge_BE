@@ -2,9 +2,10 @@ from flask import request, jsonify
 from flask_restful import Resource
 from firebase_admin import auth, initialize_app, credentials
 from app.core.firebase import initialize_firebase_app, firestore
+from google.cloud.exceptions import NotFound
 
 class IngredientResource(Resource):
-    def get(self):
+    def get(self, user_id):
         try:
             # # Use initialize_firebase_app() in your code
             # initialize_firebase_app()
@@ -12,11 +13,39 @@ class IngredientResource(Resource):
             db = firestore.client()
 
             collection_ref = db.collection('ingredient')
+            collection_ref2 = db.collection('pantry')
+
+            # Construct the query
+            query = collection_ref2.where('user_id', '==', user_id)
+
             docs = collection_ref.stream()
+            docs2 = query.stream()
+
+            
 
             data = []
             for doc in docs:
-                data.append(doc.to_dict())
+                doc_dict = doc.to_dict()
+
+                # Construct a dictionary to handle optional fields "user_id"
+                ingredient = {
+                    "user_id": doc_dict.get("user_id", "Not specified"),
+                    "ingredient_id": doc_dict.get("ingredient_id"),
+                    "ingredient_name": doc_dict.get("ingredient_name"),
+                    "ingredient_type_code": doc_dict.get("ingredient_type_code"),
+                }
+                
+                data.append(ingredient)
+
+            for doc in docs2:
+                doc_dict2 = doc.to_dict()
+                pantrie = {
+                    "user_id": doc_dict2.get("user_id"),
+                    "ingredient_id": doc_dict2.get("pantry_id"),
+                    "ingredient_name": doc_dict2.get("pantryName"),
+                    "ingredient_type_code": doc_dict2.get("ingredient_type_code"),
+                }
+                data.append(pantrie)
 
             response = {}
             if data:
