@@ -26,7 +26,7 @@ api.add_resource(LinkRecipeResource, '/api/v1/LinkRecipe')
 api.add_resource(PantryResourceByUser, '/api/v1/pantry/<string:user_id>')
 api.add_resource(AddPantryResource, '/api/v1/pantry/add/<string:user_id>')
 api.add_resource(EditPantryResource, '/api/v1/pantry/edit/<string:doc_id>')
-api.add_resource(DeletePantryResource, '/api/v1/pantry/delete/<string:doc_id>')
+api.add_resource(DeletePantryResource, '/api/v1/pantry/delete/<string:pantry_id>')
 
 # AWS Lambda handler
 def lambda_handler(event, context):

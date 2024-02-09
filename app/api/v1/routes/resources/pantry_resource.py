@@ -133,23 +133,26 @@ class EditPantryResource(Resource):
             error_message = f"An error occurred: {str(e)}"
             return {"error": error_message}, 500
         
-
+        
 class DeletePantryResource(Resource):
-    def delete(self, doc_id):
+    def delete(self, pantry_id):
         try:
             # Initialize Firestore client
             db = firestore.Client()
 
-            # Get reference to the document in the 'pantry' collection
-            doc_ref = db.collection('pantry').document(doc_id)
+            # Query the 'pantry' collection to find documents with matching user_id
+            query_ref = db.collection('pantry').where("pantry_id", "==", pantry_id)
+            docs = query_ref.stream()
 
-            # Delete the document from Firestore
-            doc_ref.delete()
+            # Delete each document found with the matching user_id
+            for doc in docs:
+                doc_ref = db.collection('pantry').document(doc.id)
+                doc_ref.delete()
 
             # Return a success response
             response = {
                 "status": "success",
-                "message": f"Document with ID {doc_id} deleted successfully"
+                "message": f"All pantry documents for user with ID {pantry_id} deleted successfully"
             }
             return response, 200
 
