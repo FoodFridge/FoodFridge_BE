@@ -1,6 +1,7 @@
 import firebase_admin
 from firebase_admin import credentials
 from firebase_admin import firestore
+from firebase_admin import auth
 
 #authenticate to firebase
 cred = credentials.Certificate("firebase_credentials.json")
@@ -16,5 +17,5 @@ firebase_admin.initialize_app(cred)
 email = "kktesr@gmail.com"
 password = "12346"
 
-user = auth.ceate_user_with_email_and_password(email,password)
-print(user)
+user = auth.create_user(email=email, password=password)
+print("Successfully created user:", user.uid)
