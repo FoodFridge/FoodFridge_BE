@@ -1,12 +1,11 @@
 import os
-from flask import jsonify, request
+from flask import jsonify, request, session
 from flask_restful import Resource
 import requests
+import app
 from app.core.firebase import initialize_firebase_app, firestore
 import uuid
 
-
-active_sessions = set()
 
 class Login_up_with_email_and_password(Resource):
     def post(self):
@@ -30,10 +29,9 @@ class Login_up_with_email_and_password(Resource):
         response = requests.post(endpoint, json=data)
         idToken =  response.json().get("idToken")
 
-        if idToken not in active_sessions:
-            active_sessions.add(idToken)
+        session['id'] = idToken
 
-        # print('session', active_sessions)
+        print(session['id'])
 
         if response.status_code == 200:
             # Request successful, parse and return response JSON
@@ -43,26 +41,6 @@ class Login_up_with_email_and_password(Resource):
             error_message = response.json().get('error', 'Failed to sign in')
             print(f"Failed to sign in: {error_message}")
             return None
-        
-class Logout(Resource):
-    def post(self):
-
-        data = request.get_json()
-
-        idToken = data.get('idToken')
-        print('sessio',active_sessions)
-        print('id',idToken)
-        # Firebase Authentication REST API endpoint for revoking tokens
-        if idToken in active_sessions:
-        # Invalidate the session or token
-            active_sessions.remove(idToken)
-            print('sign out successfull')
-            # Check if the request was successful
-            return 'sign out successfull'
-        else:
-            # Token revocation failed, return error response
-            print(f"Failed to sign out")
-            return "Failed to sign out"
 
 
 class Sign_up_with_email_and_password(Resource):
@@ -93,14 +71,11 @@ class Sign_up_with_email_and_password(Resource):
 
             # Send POST request
             response = requests.post(endpoint, json=data)
-            
-            data = response.json()
 
-            idToken = data.get('idToken')
-            print(data.get('idToken'))
+            idToken =  response.json().get("idToken")
 
-            if idToken not in active_sessions:
-                active_sessions.add(idToken)
+            session['id'] = idToken
+            print(session['id'])
             
             user_ref = db.collection('users').document()
             user_ref.set({
@@ -122,3 +97,11 @@ class Sign_up_with_email_and_password(Resource):
             # Handle signup errors
             print("Failed to sign up:", e)
             return {"message": f"Signup failed: {str(e)}"}, 500
+        
+
+class Logout(Resource):
+    def post(self):
+        session.clear()
+        print('sign out successfull')
+            # Check if the request was successful
+        return 'sign out successfull'
