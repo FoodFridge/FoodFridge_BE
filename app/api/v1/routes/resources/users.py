@@ -27,11 +27,11 @@ class Login_up_with_email_and_password(Resource):
 
         # Send POST request
         response = requests.post(endpoint, json=data)
-        idToken =  response.json().get("idToken")
+        # idToken =  response.json().get("idToken")
 
-        session['id'] = idToken
+        # session['id'] = idToken
 
-        print(session['id'])
+        # print(session['id'])
 
         if response.status_code == 200:
             # Request successful, parse and return response JSON
@@ -72,10 +72,10 @@ class Sign_up_with_email_and_password(Resource):
             # Send POST request
             response = requests.post(endpoint, json=data)
 
-            idToken =  response.json().get("idToken")
+            # idToken =  response.json().get("idToken")
 
-            session['id'] = idToken
-            print(session['id'])
+            # session['id'] = idToken
+            # print(session['id'])
             
             user_ref = db.collection('users').document()
             user_ref.set({
@@ -101,7 +101,7 @@ class Sign_up_with_email_and_password(Resource):
 
 class Logout(Resource):
     def post(self):
-        session.clear()
+        # session.clear()
         print('sign out successfull')
             # Check if the request was successful
         return 'sign out successfull'
