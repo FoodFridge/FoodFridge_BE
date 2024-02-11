@@ -4,12 +4,25 @@ from firebase_admin import auth, initialize_app, credentials
 from app.core.firebase import initialize_firebase_app, firestore
 # import logging
 class FavoriteResourceByUser(Resource):
-    def get(self, user_id,is_favorite):
+    def get(self,user_id,is_favorite):
         try:
+            
+            # Check if 'Authorization' header exists
+            authorization_header = request.headers.get('Authorization')
+            if authorization_header and authorization_header.startswith('Bearer '):
+                id_token = authorization_header.split(' ')[1]
+            else:
+                # Return error response if 'Authorization' header is missing or invalid
+                return {"error": "Missing or invalid Authorization header"}, 401
+        
+            # Verify the ID token before proceeding
+            decoded_token = auth.verify_id_token(id_token)
+
+            if not decoded_token['uid']:
+                return {"error": "uid invalid."}, 401
+        
             db = firestore.client()
             collection_ref = db.collection('favorite')
-            # docs = collection_ref.stream()
-            # Construct the query
             query = collection_ref.where('status', '==', is_favorite).where('user_id', '==', user_id)
             docs = query.stream()
             data = []
