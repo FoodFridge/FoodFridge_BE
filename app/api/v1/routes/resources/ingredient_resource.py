@@ -30,7 +30,7 @@ class IngredientResource(Resource):
                 # Construct a dictionary to handle optional fields "user_id"
                 ingredient = {
                     "user_id": doc_dict.get("user_id", "Not specified"),
-                    "ingredient_id": doc.id,
+                    "doc_id": doc.id,
                     "ingredient_name": doc_dict.get("ingredient_name"),
                     "ingredient_type_code": doc_dict.get("ingredient_type_code"),
                 }
@@ -41,7 +41,7 @@ class IngredientResource(Resource):
                 doc_dict2 = doc.to_dict()
 
                 pantry = {
-                    "ingredient_id": doc.id,
+                    "doc_id": doc.id,
                     "ingredient_name": doc_dict2.get("pantryName"),
                     "ingredient_type_code": doc_dict2.get("ingredient_type_code"),
                 }
