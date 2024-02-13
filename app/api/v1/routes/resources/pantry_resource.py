@@ -12,14 +12,6 @@ app = Flask(__name__)
 random_uuid = uuid.uuid4()
 random_uuid_str = str(random_uuid)
 
-# class CustomJSONEncoder(json.JSONEncoder):
-#     def default(self, obj):
-#         if isinstance(obj, datetime):
-#             return obj.isoformat()
-#         return super().default(obj)
-
-# app.json_encoder = CustomJSONEncoder
-
 class PantryResourceByUser(Resource):
     def get(self, user_id):
         try:
@@ -36,8 +28,7 @@ class PantryResourceByUser(Resource):
                 data.append(doc_data)
             print(data)
             if data:
-                # filtered_data = [item for item in data if item.get("user_id") == user_id]
-                # print(filtered_data)
+
                 transformed_data = {}
                 for item in data:
                     date = item.get("date")
