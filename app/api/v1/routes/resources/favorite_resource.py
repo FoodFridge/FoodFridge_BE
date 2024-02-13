@@ -6,7 +6,7 @@ from app.core.firebase import initialize_firebase_app, firestore
 class FavoriteResourceByUser(Resource):
     def get(self,user_id,is_favorite):
         try:
-            
+
             # Check if 'Authorization' header exists
             authorization_header = request.headers.get('Authorization')
             if authorization_header and authorization_header.startswith('Bearer '):
@@ -14,7 +14,7 @@ class FavoriteResourceByUser(Resource):
             else:
                 # Return error response if 'Authorization' header is missing or invalid
                 return {"error": "Missing or invalid Authorization header"}, 401
-        
+
             # Verify the ID token before proceeding
             decoded_token = auth.verify_id_token(id_token)
 
