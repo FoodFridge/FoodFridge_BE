@@ -94,4 +94,3 @@ class AddFavoriteResource(Resource):
             # Handle the exception and return an appropriate response
             error_message = f"An error occurred: {str(e)}"
             return {"error": error_message}, 500
-
