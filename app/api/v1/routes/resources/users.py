@@ -1,16 +1,18 @@
 import os
-from flask import jsonify, request, session
+from flask import jsonify, request
 from flask_restful import Resource
 import requests
 import app
 from app.core.firebase import initialize_firebase_app, firestore
 import uuid
+from dotenv import load_dotenv
 
-
-class Login_up_with_email_and_password(Resource):
+class Login_with_email_and_password(Resource):
     def post(self):
+        
 
         try:
+            load_dotenv()
             api_key = os.getenv("api_key")
             
             endpoint = f"https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key={api_key}"
@@ -25,20 +27,28 @@ class Login_up_with_email_and_password(Resource):
                 "password": password,
                 "returnSecureToken": True
             }
-
             res = requests.post(endpoint, json=data)
+
             status_code = res.status_code
+            print(res.text)
+
 
             if status_code == 200:
                 res = res.json()
 
-                id = res['localId'] # localId = uid (uid ใช้ ref data ทั้งหมดเช่น favorite)
+                localId = res['localId'] # localId = uid (uid ใช้ ref data ทั้งหมดเช่น favorite)
                 idToken = res['idToken'] # ใช้สำหรับแนบ authorization api เส้นอื่นๆ
                 refreshToken = res['refreshToken'] # สำหรับ ขอ token ใหม่กรณี expire ต้องมีเส้น refresh token 
                 expiresIn = res['expiresIn'] # เวลา token ที่ใช้ได้
 
+                db = firestore.client()
+                collection_ref = db.collection('users')
+                docs = collection_ref.where("localId", "==", localId).stream()
+
+                print(docs)
+
                 data = {
-                    "id": id,
+                    "localId": localId,
                     "token": idToken,
                     "refreshToken": refreshToken,
                     "expiresIn": expiresIn
@@ -66,6 +76,7 @@ class Login_up_with_email_and_password(Resource):
 
 class Sign_up_with_email_and_password(Resource):
     def post(self):
+        load_dotenv()
         api_key = os.getenv("api_key")
 
         endpoint = f"https://identitytoolkit.googleapis.com/v1/accounts:signUp?key={api_key}"
@@ -75,13 +86,12 @@ class Sign_up_with_email_and_password(Resource):
         # Extract email and password from the request data
         email = data.get('email')
         password = data.get('password')
-        user_id = uuid.uuid4().hex
+        # user_id = uuid.uuid4().hex
         name = data.get('name')
         db = firestore.client()
 
         try:
 
-            # db = firestore.client()
             collection_ref = db.collection('users')
             query = collection_ref.where('email', '==', email)
             docs = query.stream()
@@ -113,7 +123,6 @@ class Sign_up_with_email_and_password(Resource):
                 user_ref.set({
                     'email': email,
                     'name': name,
-                    'user_id': user_id
                 })
 
                 response = {
