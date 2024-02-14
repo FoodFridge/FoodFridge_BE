@@ -145,7 +145,13 @@ class Sign_up_with_email_and_password(Resource):
 
 class Logout(Resource):
     def post(self):
-        # session.clear()
-        print('sign out successfull')
-            # Check if the request was successful
-        return 'sign out successfull'
+
+        headers = request.headers
+
+        # Create a new dictionary without the 'Authorization' key
+        new_headers = {key: value for key, value in headers.items() if key != 'Authorization'}
+
+        # Create a new EnvironHeaders object with the updated headers
+        request.headers = new_headers
+
+        return {'message': 'Logout successful'}, 200
