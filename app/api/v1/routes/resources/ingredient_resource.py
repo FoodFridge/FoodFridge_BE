@@ -41,7 +41,7 @@ class IngredientResource(Resource):
                 doc_dict2 = doc.to_dict()
 
                 pantry = {
-                    "user_id": doc_dict.get("user_id", "Not specified"),
+                    "user_id": doc_dict.get("user_id"),
                     "doc_id": doc.id,
                     "ingredient_name": doc_dict2.get("pantryName"),
                     "ingredient_type_code": doc_dict2.get("ingredient_type_code"),
