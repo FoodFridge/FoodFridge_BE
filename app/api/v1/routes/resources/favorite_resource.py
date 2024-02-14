@@ -4,7 +4,7 @@ from firebase_admin import auth, initialize_app, credentials
 from app.core.firebase import initialize_firebase_app, firestore
 # import logging
 class FavoriteResourceByUser(Resource):
-    def get(self,user_id,is_favorite):
+    def get(self,localId,is_favorite):
         try:
 
             # Check if 'Authorization' header exists
@@ -23,7 +23,7 @@ class FavoriteResourceByUser(Resource):
         
             db = firestore.client()
             collection_ref = db.collection('favorite')
-            query = collection_ref.where('status', '==', is_favorite).where('user_id', '==', user_id)
+            query = collection_ref.where('status', '==', is_favorite).where('user_id', '==', localId)
             docs = query.stream()
             data = []
             for doc in docs:
