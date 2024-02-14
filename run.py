@@ -1,4 +1,5 @@
 # run.py
+import secrets
 from flask import Flask
 from flask_restful import Api
 from app.core.firebase import initialize_firebase_app
@@ -9,10 +10,12 @@ from app.api.v1.routes.resources.recipe_resource import GenerateRecipeFromIngred
 from app.api.v1.routes.resources.link_recipe_resource import LinkRecipeResource
 from app.api.v1.routes.resources.pantry_resource import PantryResourceByUser, AddPantryResource, EditPantryResource, DeletePantryResource
 from app.api.v1.routes.resources.users import Login_up_with_email_and_password, Logout, Sign_up_with_email_and_password
-import awsgi
+# import awsgi
 
 app = Flask(__name__)
 api = Api(app)
+secret_key = secrets.token_hex(32)
+app.secret_key = secret_key
 
 # Use initialize_firebase_app()
 initialize_firebase_app()
@@ -27,7 +30,7 @@ api.add_resource(LinkRecipeResource, '/api/v1/LinkRecipe')
 api.add_resource(PantryResourceByUser, '/api/v1/pantry/<string:user_id>')
 api.add_resource(AddPantryResource, '/api/v1/pantry/add/<string:user_id>')
 api.add_resource(EditPantryResource, '/api/v1/pantry/edit/<string:doc_id>')
-api.add_resource(DeletePantryResource, '/api/v1/pantry/delete/<string:pantry_id>')
+api.add_resource(DeletePantryResource, '/api/v1/pantry/delete/<string:doc_id>')
 api.add_resource(Login_up_with_email_and_password, '/login_up_with_email_and_password')
 api.add_resource(Logout, '/logout')
 api.add_resource(Sign_up_with_email_and_password, '/sign_up_with_email_and_password')

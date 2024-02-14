@@ -1,68 +1,67 @@
 import os
-from flask import jsonify, request
+from flask import jsonify, request, session
 from flask_restful import Resource
 import requests
+import app
 from app.core.firebase import initialize_firebase_app, firestore
 import uuid
 
 
-active_sessions = set()
-
 class Login_up_with_email_and_password(Resource):
     def post(self):
-        api_key = os.getenv("api_key")
-        
-        endpoint = f"https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key={api_key}"
-        # Assuming you're using JSON data for login credentials
-        data = request.get_json()
-        # Extract email and password from the request data
-        email = data.get('email')
-        password = data.get('password')
 
-        data = {
-            "email": email,
-            "password": password,
-            "returnSecureToken": True
-        }
-        
+        try:
+            api_key = os.getenv("api_key")
+            
+            endpoint = f"https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key={api_key}"
+            # Assuming you're using JSON data for login credentials
+            data = request.get_json()
+            # Extract email and password from the request data
+            email = data.get('email')
+            password = data.get('password')
 
-        # Send POST request
-        response = requests.post(endpoint, json=data)
-        idToken =  response.json().get("idToken")
+            data = {
+                "email": email,
+                "password": password,
+                "returnSecureToken": True
+            }
 
-        if idToken not in active_sessions:
-            active_sessions.add(idToken)
+            res = requests.post(endpoint, json=data)
+            status_code = res.status_code
 
-        # print('session', active_sessions)
+            if status_code == 200:
+                res = res.json()
 
-        if response.status_code == 200:
-            # Request successful, parse and return response JSON
-            return response.json()
-        else:
-            # Request failed, print error message
-            error_message = response.json().get('error', 'Failed to sign in')
-            print(f"Failed to sign in: {error_message}")
-            return None
-        
-class Logout(Resource):
-    def post(self):
+                id = res['localId'] # localId = uid (uid ใช้ ref data ทั้งหมดเช่น favorite)
+                idToken = res['idToken'] # ใช้สำหรับแนบ authorization api เส้นอื่นๆ
+                refreshToken = res['refreshToken'] # สำหรับ ขอ token ใหม่กรณี expire ต้องมีเส้น refresh token 
+                expiresIn = res['expiresIn'] # เวลา token ที่ใช้ได้
 
-        data = request.get_json()
+                data = {
+                    "id": id,
+                    "token": idToken,
+                    "refreshToken": refreshToken,
+                    "expiresIn": expiresIn
+                }
 
-        idToken = data.get('idToken')
-        print('sessio',active_sessions)
-        print('id',idToken)
-        # Firebase Authentication REST API endpoint for revoking tokens
-        if idToken in active_sessions:
-        # Invalidate the session or token
-            active_sessions.remove(idToken)
-            print('sign out successfull')
-            # Check if the request was successful
-            return 'sign out successfull'
-        else:
-            # Token revocation failed, return error response
-            print(f"Failed to sign out")
-            return "Failed to sign out"
+                response = {
+                    "status": "1",
+                    "message": "Authentication successful. Welcome "+email,
+                    "data": data
+                }
+            else:
+                response = {
+                    "status": "0",
+                    "message": "Invalid Email or Password!",
+                    "data": []
+                }
+
+            return response , 200
+        except Exception as e:
+            # Handle signup errors
+            print("Failed to sign up:", e)
+            return {"message": f"Signup failed: {str(e)}"}, 500
+      
 
 
 class Sign_up_with_email_and_password(Resource):
@@ -81,44 +80,63 @@ class Sign_up_with_email_and_password(Resource):
         db = firestore.client()
 
         try:
-#             # Check if the password meets the requirements
-            if len(password) < 6:
-                raise ValueError("Password must be at least 6 characters long")
 
-            data = {
-                "email": email,
-                "password": password,
-                "returnSecureToken": True
-            }
+            # db = firestore.client()
+            collection_ref = db.collection('users')
+            query = collection_ref.where('email', '==', email)
+            docs = query.stream()
 
-            # Send POST request
-            response = requests.post(endpoint, json=data)
-            
-            data = response.json()
+            # Check if any documents are returned
+            email_exists = any(docs)
 
-            idToken = data.get('idToken')
-            print(data.get('idToken'))
+            if not email_exists:
+                print("Email does not exist in the database. You can proceed to insert the document.")
+         
+                # Check if the password meets the requirements
+                if len(password) < 6:
+                    raise ValueError("Password must be at least 6 characters long")
 
-            if idToken not in active_sessions:
-                active_sessions.add(idToken)
-            
-            user_ref = db.collection('users').document()
-            user_ref.set({
-                'email': email,
-                'name': name,
-                'user_id': user_id
-                # Add more user data fields as needed
-            })
+                data = {
+                    "email": email,
+                    "password": password,
+                    "returnSecureToken": True
+                }
 
-            if response.status_code == 200:
-                # Request successful, parse and return response JSON
-                return response.json()
+                # Send POST request
+                response = requests.post(endpoint, json=data)
+
+                # localId = uid
+                localId =  response.json().get("localId")
+
+                # set uid = document id
+                user_ref = db.collection('users').document(localId)
+                user_ref.set({
+                    'email': email,
+                    'name': name,
+                    'user_id': user_id
+                })
+
+                response = {
+                    "status": "1",
+                    "message": "Data retrieved successfully",
+                }   
             else:
-                # Request failed, print error message
-                print(f"Failed to sign up: {response.json()}")
-                return None
+                response = {
+                    "status": "0",
+                    "message": "Data already exists",
+                }   
+            
+            return response , 200
         
         except Exception as e:
             # Handle signup errors
             print("Failed to sign up:", e)
             return {"message": f"Signup failed: {str(e)}"}, 500
+        
+
+class Logout(Resource):
+    def post(self):
+        # session.clear()
+        print('sign out successfull')
+            # Check if the request was successful
+        return 'sign out successfull'
