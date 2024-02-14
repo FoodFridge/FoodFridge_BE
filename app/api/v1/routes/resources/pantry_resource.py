@@ -31,7 +31,6 @@ class PantryResourceByUser(Resource):
                     date = item.get("date")
                     if date:
                         value = {
-                                "pantry_id": item.get("pantry_id"),
                                 "pantryName": item.get("pantryName"),
                                 "doc_id": item.get("doc_id"),
                             }
