@@ -1,6 +1,7 @@
 import os
 from flask import jsonify, request
 from flask_restful import Resource
+from firebase_admin import auth
 import requests
 import app
 from app.core.firebase import initialize_firebase_app, firestore
@@ -10,7 +11,6 @@ from dotenv import load_dotenv
 class Login_with_email_and_password(Resource):
     def post(self):
         
-
         try:
             load_dotenv()
             api_key = os.getenv("api_key")
@@ -72,8 +72,6 @@ class Login_with_email_and_password(Resource):
             print("Failed to sign up:", e)
             return {"message": f"Signup failed: {str(e)}"}, 500
       
-
-
 class Sign_up_with_email_and_password(Resource):
     def post(self):
         load_dotenv()
@@ -149,3 +147,115 @@ class Logout(Resource):
         print('sign out successfull')
             # Check if the request was successful
         return 'sign out successfull'
+
+
+
+#to do - to verifie email
+'''
+class Update_Email(Resource):
+    def post(self, localId):
+        try:
+            authorization_header = request.headers.get('Authorization')
+            if authorization_header and authorization_header.startswith('Bearer '):
+                id_token = authorization_header.split(' ')[1]
+            else:
+                # Return error response if 'Authorization' header is missing or invalid
+                return {"error": "Missing or invalid Authorization header"}, 401
+
+                # Verify the ID token before proceeding
+            decoded_token = auth.verify_id_token(id_token)
+
+            if not decoded_token['uid']:
+                return {"error": "uid invalid."}, 401
+
+            load_dotenv()
+            api_key = os.getenv("api_key")
+
+            endpoint = f"https://identitytoolkit.googleapis.com/v1/accounts:update?key={api_key}"
+
+            # Extract email from the request data
+            data = request.get_json()
+            new_email = data.get('email')
+
+            db = firestore.client()
+            collection_ref = db.collection('users')
+            query = collection_ref.where('email', '==', new_email)
+            docs = query.stream()
+
+            # Check if any documents are returned
+            email_exists = any(docs)
+
+            if not email_exists:
+                print("Email does not exist in the database. You can proceed to insert the document.")
+                if not decoded_token.get('email_verified'):
+                    return {"error": "Please verify the new email before changing email"}, 400
+                
+                auth.update_user(decoded_token['uid'], email=new_email)
+                auth.send_email_verification(decoded_token['uid'])
+                
+                # payload = {
+                #     "idToken":id_token,
+                #     "email": new_email,
+                #     "returnSecureToken": True
+                # }
+
+                # response = requests.post(endpoint, json=payload)
+                # response_data = response.json()
+
+                return {"message": "Email update requested. Please verify your new email address."}, 200
+            else:
+                # Email already exists in the database, return an error response
+                return {"error": "Email already exists in the database"}, 400
+
+            #     if response.ok:
+            #         # Update user's email in Firestore database
+            #         user_ref = db.collection('users').document(localId)
+            #         user_ref.update({"email": new_email})
+            #         return {"message": "Email updated successfully"}, 200
+            #     else:
+            #         # Return error response if the request to Identity Toolkit API failed
+            #         return {"error": response_data.get('error', 'Failed to update email')}, response.status_code
+            # else:
+            #     # Email already exists in the database, return an error response
+            #     return {"error": "Email already exists in the database"}, 400
+            
+        except Exception as e:
+            # Handle any exceptions and return an appropriate response
+            error_message = f"An error occurred: {str(e)}"
+            return {"error": error_message}, 500
+'''
+
+
+class Update_Name(Resource):
+    def post(self, localId):
+        try:
+            authorization_header = request.headers.get('Authorization')
+            if authorization_header and authorization_header.startswith('Bearer '):
+                id_token = authorization_header.split(' ')[1]
+            else:
+                # Return error response if 'Authorization' header is missing or invalid
+                return {"error": "Missing or invalid Authorization header"}, 401
+
+                # Verify the ID token before proceeding
+            decoded_token = auth.verify_id_token(id_token)
+
+            if not decoded_token['uid']:
+                return {"error": "uid invalid."}, 401
+            
+            data = request.get_json()
+            new_name = data.get('name')
+
+            db = firestore.client()
+            doc_ref = db.collection('users').document(localId)
+            doc_ref.update({"name": new_name})
+
+            response = {
+                "status": "success",
+                "message": "Document data updated successfully"
+            }
+            return response, 200
+
+        except Exception as e:
+            # Handle exceptions
+            error_message = f"An error occurred: {str(e)}"
+            return {"error": error_message}, 500    
