@@ -11,3 +11,5 @@ build
 lambda
 firebase/app/api/v1/routes/resources/__pycache__/pantry_resource.cpython-312.pyc
 firebase/app/api/v1/routes/resources/__pycache__/favorite_resource.cpython-312.pyc
+app/api/v1/routes/resources/__pycache__/favorite_resource.cpython-312.pyc
+app/api/v1/routes/resources/__pycache__/pantry_resource.cpython-312.pyc
