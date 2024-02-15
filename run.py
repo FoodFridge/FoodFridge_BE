@@ -34,7 +34,7 @@ api.add_resource(DeletePantryResource, '/api/v1/pantry/delete/<string:pantry_id>
 api.add_resource(Login_with_email_and_password, '/login_with_email_and_password')
 api.add_resource(Logout, '/logout')
 api.add_resource(Sign_up_with_email_and_password, '/sign_up_with_email_and_password')
-api.add_resource(Update_Name, '/update_email/<string:localId>')
+api.add_resource(Update_Name, '/update_name/<string:localId>')
 
 # AWS Lambda handler
 def lambda_handler(event, context):

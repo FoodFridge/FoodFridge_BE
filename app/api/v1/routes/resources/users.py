@@ -247,6 +247,7 @@ class Update_Name(Resource):
 
             db = firestore.client()
             doc_ref = db.collection('users').document(localId)
+            print(doc_ref)
             doc_ref.update({"name": new_name})
 
             response = {
