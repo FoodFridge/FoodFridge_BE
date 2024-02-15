@@ -13,7 +13,7 @@ class LinkRecipeResource(Resource):
             # parameter json
             data = request.get_json()
 
-            user_id = data.get('userId')
+            localId = data.get('localId')
             recipe_name = data.get('recipeName')
         
             # Load environment variables from .env file
@@ -51,7 +51,7 @@ class LinkRecipeResource(Resource):
                 # docs = collection_ref.stream()
 
                 # Construct the query
-                query = collection_ref.where('recipe_name', '==', recipe_name).where('user_id', '==', user_id)
+                query = collection_ref.where('recipe_name', '==', recipe_name).where('user_id', '==', localId)
                 docs = query.stream()
                 dataFav = []
                 for doc in docs:
@@ -97,7 +97,7 @@ class LinkRecipeResource(Resource):
                                     'recipe_name': recipe_name,
                                     'title': title,
                                     'url': link,
-                                    'user_id': user_id,
+                                    'user_id': localId,
                                     # Add more fields as needed
                                 }
 
@@ -117,10 +117,10 @@ class LinkRecipeResource(Resource):
                 collection_ref = db.collection('favorite')
 
                 # Construct the query using filter keyword argument
-                query = collection_ref.where('recipe_name', '==', recipe_name).where('user_id', '==', user_id)
+                query = collection_ref.where('recipe_name', '==', recipe_name).where('user_id', '==', localId)
 
                 # Alternatively, you can use filter keyword argument directly
-                # query = collection_ref.where(recipe_name='recipe_name', user_id='user_id')
+                # query = collection_ref.where(recipe_name='recipe_name', user_id='localId')
 
                 docs = query.stream()
                 dataResult = []

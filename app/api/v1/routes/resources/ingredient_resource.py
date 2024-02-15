@@ -5,8 +5,22 @@ from app.core.firebase import initialize_firebase_app, firestore
 from google.cloud.exceptions import NotFound
 
 class IngredientResource(Resource):
-    def get(self, user_id):
+    def get(self, localId):
         try:
+
+             # Check if 'Authorization' header exists
+            authorization_header = request.headers.get('Authorization')
+            if authorization_header and authorization_header.startswith('Bearer '):
+                id_token = authorization_header.split(' ')[1]
+            else:
+                # Return error response if 'Authorization' header is missing or invalid
+                return {"error": "Missing or invalid Authorization header"}, 401
+
+            # Verify the ID token before proceeding
+            decoded_token = auth.verify_id_token(id_token)
+
+            if not decoded_token['uid']:
+                return {"error": "uid invalid."}, 401
             # # Use initialize_firebase_app() in your code
             # initialize_firebase_app()
 
@@ -16,7 +30,7 @@ class IngredientResource(Resource):
             collection_ref2 = db.collection('pantry')
 
             # Construct the query
-            query = collection_ref2.where('user_id', '==', user_id)
+            query = collection_ref2.where('user_id', '==', localId)
 
             docs = collection_ref.stream()
             docs2 = query.stream()

@@ -2,9 +2,7 @@ import os
 from flask import jsonify, request
 from flask_restful import Resource
 import requests
-import app
 from app.core.firebase import initialize_firebase_app, firestore
-import uuid
 from dotenv import load_dotenv
 
 class Login_with_email_and_password(Resource):
@@ -121,6 +119,7 @@ class Sign_up_with_email_and_password(Resource):
                 # set uid = document id
                 user_ref = db.collection('users').document(localId)
                 user_ref.set({
+                    'localId': localId,
                     'email': email,
                     'name': name,
                 })
