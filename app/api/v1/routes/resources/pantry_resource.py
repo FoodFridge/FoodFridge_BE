@@ -1,51 +1,70 @@
 import json
 from flask import Flask, request, jsonify
 from flask_restful import Resource
-from firebase_admin import auth, initialize_app, credentials
 from app.core.firebase import initialize_firebase_app, firestore
 from datetime import datetime
 import logging
+import uuid
+import pytz,re,datetime
 # from google.cloud.firestore_v1 import DatetimeWithNanoseconds
 
 app = Flask(__name__)
 
+random_uuid = uuid.uuid4()
+random_uuid_str = str(random_uuid)
+
+class CustomJSONEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, datetime):
+            return obj.isoformat()
+        return super().default(obj)
+
+app.json_encoder = CustomJSONEncoder
 
 class PantryResourceByUser(Resource):
-    def get(self, localId):
-
+    def get(self, user_id):
         try:
-             # Check if 'Authorization' header exists
-            authorization_header = request.headers.get('Authorization')
-            if authorization_header and authorization_header.startswith('Bearer '):
-                id_token = authorization_header.split(' ')[1]
-            else:
-                # Return error response if 'Authorization' header is missing or invalid
-                return {"error": "Missing or invalid Authorization header"}, 401
+            user_timezone = request.headers.get('User-Timezone')
 
-            # Verify the ID token before proceeding
-            decoded_token = auth.verify_id_token(id_token)
+           # Regular expression pattern to match "America" in a case-insensitive manner
+            pattern = re.compile(r'(?i)America')
 
-            if not decoded_token['uid']:
-                return {"error": "uid invalid."}, 401
-            # # Use initialize_firebase_app() in your code
-            # initialize_firebase_app()
+            # Check if the pattern is found in the string
+            found = bool(re.search(pattern, user_timezone))
 
             db = firestore.client()
             collection_ref = db.collection('pantry')
-            docs = collection_ref.where("user_id", "==", localId).stream()
-            # print(docs)
+            docs = collection_ref.stream()
+
             data = []
             for doc in docs:
                 doc_data = doc.to_dict()
                 doc_data['doc_id'] = doc.id
                 if 'date' in doc_data:
-                    doc_data['date'] = doc_data['date'].date().isoformat()
+                    
+                    # ดึงข้อมูล datetime UTC จาก Firebase
+                    utc_time_from_firebase = doc.to_dict()['date']
+
+                    # กำหนดโซนเวลาของไทย
+                    thai_timezone = pytz.timezone(user_timezone)
+
+                    # แปลงเวลา UTC เป็นเวลาในโซนเวลาไทย
+                    local_time = utc_time_from_firebase.astimezone(thai_timezone)
+
+                    # Format the date as 'dd/mm/yyyy'
+                    if found:
+                        formatted_date = local_time.strftime('%m/%d/%Y')
+                    else:
+                        formatted_date = local_time.strftime('%d/%m/%Y')
+                    doc_data['date'] = formatted_date
+                    # doc_data['date'] = doc_data['date'].date().isoformat()
                 data.append(doc_data)
             print(data)
             if data:
-
+                filtered_data = [item for item in data if item.get("user_id") == user_id]
+                print(filtered_data)
                 transformed_data = {}
-                for item in data:
+                for item in filtered_data:
                     date = item.get("date")
                     if date:
                         value = {
@@ -72,7 +91,7 @@ class PantryResourceByUser(Resource):
                     "message": "No data available",
                     "data": []
                 }
-            print(response["data"])
+            # print(response["data"])
             return response, 200
 
         except Exception as e:
@@ -83,7 +102,7 @@ class PantryResourceByUser(Resource):
 
 class AddPantryResource(Resource):
 
-    def post(self, localId):
+    def post(self, user_id):
         try:
             db = firestore.client()
 
@@ -96,8 +115,9 @@ class AddPantryResource(Resource):
             pantry= {
                 'date': datetime.now(),
                 'pantryName': pantryName,
+                'pantry_id': random_uuid_str,
                 'ingredient_type_code': '08',
-                'user_id': localId,
+                'user_id': user_id,
             }
 
             collection_ref.document(document_id).set(pantry)
@@ -142,22 +162,24 @@ class EditPantryResource(Resource):
         
         
 class DeletePantryResource(Resource):
-    def delete(self, doc_id):
+    def delete(self, pantry_id):
         try:
             # Initialize Firestore client
             db = firestore.client()
 
             # Query the 'pantry' collection to find documents with matching user_id
-            doc_ref = db.collection('pantry').document(doc_id)
-            
+            query_ref = db.collection('pantry').where("pantry_id", "==", pantry_id)
+            docs = query_ref.stream()
 
             # Delete each document found with the matching user_id
-            doc_ref.delete()
+            for doc in docs:
+                doc_ref = db.collection('pantry').document(doc.id)
+                doc_ref.delete()
 
             # Return a success response
             response = {
                 "status": "success",
-                "message": f"All pantry document of pantry {doc_id} deleted successfully"
+                "message": f"All pantry documents for user with ID {pantry_id} deleted successfully"
             }
             return response, 200
 
