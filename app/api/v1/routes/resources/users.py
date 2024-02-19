@@ -4,6 +4,7 @@ from flask_restful import Resource
 import requests
 import app
 from app.core.firebase import initialize_firebase_app, firestore
+from firebase_admin import auth
 import uuid
 from dotenv import load_dotenv
 
@@ -146,12 +147,124 @@ class Sign_up_with_email_and_password(Resource):
 class Logout(Resource):
     def post(self):
 
-        headers = request.headers
+        # headers = request.headers
 
-        # Create a new dictionary without the 'Authorization' key
-        new_headers = {key: value for key, value in headers.items() if key != 'Authorization'}
+        # # Create a new dictionary without the 'Authorization' key
+        # new_headers = {key: value for key, value in headers.items() if key != 'Authorization'}
 
-        # Create a new EnvironHeaders object with the updated headers
-        request.headers = new_headers
+        # # Create a new EnvironHeaders object with the updated headers
+        # request.headers = new_headers
 
-        return {'message': 'Logout successful'}, 200
+        # return {'message': 'Logout successful'}, 200
+
+
+        # Get the Firebase ID token from the Authorization header
+        id_token = request.headers.get('Authorization')
+
+        #print("id_token : ",id_token)
+
+        if id_token:
+            try:
+                # Verify and decode the Firebase ID token
+                decoded_token = auth.verify_id_token(id_token)
+                # Get the user's UID from the decoded token
+                uid = decoded_token['uid']
+                # Revoke the user's session
+                auth.revoke_refresh_tokens(uid)
+                return {'message': 'Logout successful'}, 200
+            except auth.InvalidIdTokenError:
+                return {'error': 'Invalid ID token'}, 401
+            except auth.RevocationError:
+                return {'error': 'Error revoking tokens'}, 500
+            except Exception as e:
+                return {'error': str(e)}, 500
+        else:
+            return {'error': 'Authorization header missing'}, 400
+    
+
+class LoginWithGoogle(Resource):
+    def post(self):
+        id_token = request.json.get('idToken')
+
+        try:
+            # Verify ID token
+            decoded_token = auth.verify_id_token(id_token)
+            # print("decoded_token",decoded_token)
+            uid = decoded_token['uid']
+            email = decoded_token['email']
+            token = id_token
+            refreshToken = ''
+            # Expiration time
+            expiresIn = decoded_token['exp']
+            
+            # return
+            db = firestore.client()
+            collection_ref = db.collection('users')
+            docs = collection_ref.where("localId", "==", uid).stream()
+
+            # print(docs)
+
+            if any(docs):
+                data = {
+                    "localId": uid,
+                    "token": token,
+                    "refreshToken": refreshToken,
+                    "expiresIn": expiresIn
+                }
+                 
+                response = {
+                "status": "1",
+                "message": "Authentication successful. Welcome "+email,
+                "data": data
+                }
+            else:
+               response = {
+                "status": "0",
+                "message": "Invalid Email or Password!",
+                "data": []
+               }
+        
+
+            return response , 200
+        except Exception as e:
+            return {'error': str(e)}, 400
+
+
+
+class SignUpWithGoogle(Resource):
+    def post(self):
+        id_token = request.json.get('idToken')
+
+        try:
+            # Verify ID token
+            decoded_token = auth.verify_id_token(id_token)
+            uid = decoded_token['uid']
+            
+            # Check if user with this uid already exists
+            existing_user = auth.get_user(uid)
+
+            if existing_user:
+                # User already exists, return an error
+                return {'error': 'User already registered'}, 400
+            
+            # Extract user data
+            user_data = {
+                'uid': uid,
+                'email': decoded_token['email'],
+                'name': decoded_token.get('name', ''),
+                # Add other user data as needed
+            }
+
+            # Add user data to Firebase Firestore
+            db = firestore.client()
+            db.collection('users').document(uid).set(user_data)
+
+            # Create custom token for authentication
+            custom_token = auth.create_custom_token(uid)
+
+            # Return response with custom token
+            return {'message': 'User registered successfully', 'customToken': custom_token.decode()}, 200
+        except auth.InvalidIdTokenError:
+            return {'error': 'Invalid ID token'}, 400
+        except Exception as e:
+            return {'error': str(e)}, 400
