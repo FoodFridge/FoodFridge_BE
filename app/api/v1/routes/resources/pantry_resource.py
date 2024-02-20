@@ -1,29 +1,29 @@
-import json
-from flask import Flask, request, jsonify
+from flask import request
 from flask_restful import Resource
-from app.core.firebase import initialize_firebase_app, firestore
+from app.core.firebase import firestore
 from datetime import datetime
-import logging
-import uuid
 import pytz,re,datetime
-# from google.cloud.firestore_v1 import DatetimeWithNanoseconds
+from firebase_admin import auth
 
-app = Flask(__name__)
-
-random_uuid = uuid.uuid4()
-random_uuid_str = str(random_uuid)
-
-class CustomJSONEncoder(json.JSONEncoder):
-    def default(self, obj):
-        if isinstance(obj, datetime):
-            return obj.isoformat()
-        return super().default(obj)
-
-app.json_encoder = CustomJSONEncoder
 
 class PantryResourceByUser(Resource):
-    def get(self, user_id):
+    def get(self, localId):
         try:
+
+            authorization_header = request.headers.get('Authorization')
+            if authorization_header and authorization_header.startswith('Bearer '):
+                id_token = authorization_header.split(' ')[1]
+            else:
+                # Return error response if 'Authorization' header is missing or invalid
+                return {"error": "Missing or invalid Authorization header"}, 401
+
+            # Verify the ID token before proceeding
+            decoded_token = auth.verify_id_token(id_token)
+
+            if not decoded_token['uid']:
+                return {"error": "uid invalid."}, 401
+
+
             user_timezone = request.headers.get('User-Timezone')
 
            # Regular expression pattern to match "America" in a case-insensitive manner
@@ -61,7 +61,7 @@ class PantryResourceByUser(Resource):
                 data.append(doc_data)
             print(data)
             if data:
-                filtered_data = [item for item in data if item.get("user_id") == user_id]
+                filtered_data = [item for item in data if item.get("user_id") == localId]
                 print(filtered_data)
                 transformed_data = {}
                 for item in filtered_data:
@@ -101,8 +101,7 @@ class PantryResourceByUser(Resource):
 
 
 class AddPantryResource(Resource):
-
-    def post(self, user_id):
+    def post(self, localId):
         try:
             db = firestore.client()
 
@@ -115,9 +114,8 @@ class AddPantryResource(Resource):
             pantry= {
                 'date': datetime.now(),
                 'pantryName': pantryName,
-                'pantry_id': random_uuid_str,
                 'ingredient_type_code': '08',
-                'user_id': user_id,
+                'user_id': localId,
             }
 
             collection_ref.document(document_id).set(pantry)
@@ -162,24 +160,19 @@ class EditPantryResource(Resource):
         
         
 class DeletePantryResource(Resource):
-    def delete(self, pantry_id):
+    def delete(self, doc_id):
         try:
             # Initialize Firestore client
             db = firestore.client()
 
             # Query the 'pantry' collection to find documents with matching user_id
-            query_ref = db.collection('pantry').where("pantry_id", "==", pantry_id)
-            docs = query_ref.stream()
-
-            # Delete each document found with the matching user_id
-            for doc in docs:
-                doc_ref = db.collection('pantry').document(doc.id)
-                doc_ref.delete()
+            doc_ref = db.collection('pantry').document(doc_id)
+            doc_ref.delete()
 
             # Return a success response
             response = {
                 "status": "success",
-                "message": f"All pantry documents for user with ID {pantry_id} deleted successfully"
+                "message": f"All pantry documents for user with ID {doc_id} deleted successfully"
             }
             return response, 200
 
