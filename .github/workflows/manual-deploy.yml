@@ -45,14 +45,17 @@ jobs:
           cli_config_credentials_token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Create JSON File from Secret
+        shell: bash
         run: |
           echo '${{ secrets.FIREBASE }}' > firebase_credentials.json
-        shell: bash
 
       - name: Create .env File from Secret
+        shell: bash
         run: |
           echo "${{ secrets.ENV_VAR }}" > .env
-        shell: bash
 
-      - name: Execute Make All
-        run: make all
+      - name: Deploy
+        shell: bash
+        run: |
+          cd infra/s3 && terraform init && terraform plan \
+          make all
