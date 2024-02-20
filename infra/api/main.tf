@@ -1,9 +1,17 @@
 terraform {
+  required_version = "1.7.3"
   required_providers {
     aws = {
       source  = "hashicorp/aws"
       version = ">= 5.34.0"
     }
+  }
+  backend "s3" {
+    bucket         = "jessiep-tf-state-bucket"
+    key            = "infra/api/terraform.tfstate"
+    region         = "us-east-1"
+    dynamodb_table = "jessiep-tf-state-lock"
+    encrypt        = true
   }
 }
 
