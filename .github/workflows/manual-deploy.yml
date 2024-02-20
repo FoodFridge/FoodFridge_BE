@@ -33,6 +33,12 @@ jobs:
         with:
           python-version: '3.9'
 
+      - name: Install Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: latest
+          cli_config_credentials_token: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Create JSON File from Secret
         run: |
           echo '${{ secrets.FIREBASE }}' > firebase_credentials.json
