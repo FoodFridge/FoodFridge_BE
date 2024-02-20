@@ -54,4 +54,4 @@ clean:
 	rm -f lambda-*.zip
 	rm -rf build
 
-all: install deploy
+all: install plan deploy

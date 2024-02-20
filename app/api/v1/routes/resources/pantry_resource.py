@@ -5,6 +5,7 @@ from app.core.firebase import initialize_firebase_app, firestore
 from datetime import datetime
 import logging
 import uuid
+import pytz,re,datetime
 # from google.cloud.firestore_v1 import DatetimeWithNanoseconds
 
 app = Flask(__name__)
@@ -23,6 +24,14 @@ app.json_encoder = CustomJSONEncoder
 class PantryResourceByUser(Resource):
     def get(self, user_id):
         try:
+            user_timezone = request.headers.get('User-Timezone')
+
+           # Regular expression pattern to match "America" in a case-insensitive manner
+            pattern = re.compile(r'(?i)America')
+
+            # Check if the pattern is found in the string
+            found = bool(re.search(pattern, user_timezone))
+
             db = firestore.client()
             collection_ref = db.collection('pantry')
             docs = collection_ref.stream()
@@ -30,10 +39,27 @@ class PantryResourceByUser(Resource):
             data = []
             for doc in docs:
                 doc_data = doc.to_dict()
+                doc_data['doc_id'] = doc.id
                 if 'date' in doc_data:
-                    doc_data['date'] = doc_data['date'].date().isoformat()
+                    
+                    # ดึงข้อมูล datetime UTC จาก Firebase
+                    utc_time_from_firebase = doc.to_dict()['date']
+
+                    # กำหนดโซนเวลาของไทย
+                    thai_timezone = pytz.timezone(user_timezone)
+
+                    # แปลงเวลา UTC เป็นเวลาในโซนเวลาไทย
+                    local_time = utc_time_from_firebase.astimezone(thai_timezone)
+
+                    # Format the date as 'dd/mm/yyyy'
+                    if found:
+                        formatted_date = local_time.strftime('%m/%d/%Y')
+                    else:
+                        formatted_date = local_time.strftime('%d/%m/%Y')
+                    doc_data['date'] = formatted_date
+                    # doc_data['date'] = doc_data['date'].date().isoformat()
                 data.append(doc_data)
-            # print(data)
+            print(data)
             if data:
                 filtered_data = [item for item in data if item.get("user_id") == user_id]
                 print(filtered_data)
@@ -42,8 +68,8 @@ class PantryResourceByUser(Resource):
                     date = item.get("date")
                     if date:
                         value = {
-                                "pantry_id": item.get("pantry_id"),
-                                "pantryName": item.get("pantryName")
+                                "pantryName": item.get("pantryName"),
+                                "doc_id": item.get("doc_id"),
                             }
                         transformed_data.setdefault(date, []).append(value)
 
@@ -65,7 +91,7 @@ class PantryResourceByUser(Resource):
                     "message": "No data available",
                     "data": []
                 }
-            print(response["data"])
+            # print(response["data"])
             return response, 200
 
         except Exception as e:

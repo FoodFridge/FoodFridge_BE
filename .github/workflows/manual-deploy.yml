@@ -10,6 +10,10 @@ on:
         options:
           - production
 
+permissions:
+  id-token: write
+  contents: read
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -22,8 +26,9 @@ jobs:
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: ${{ secrets.ARN_OIDC_ROLE }}
+          role-to-assume: ${{ vars.ARN_OIDC_ROLE }}
           aws-region: us-east-1
+          audience: sts.amazonaws.com
 
       - name: Identity Check
         run: aws sts get-caller-identity
@@ -33,15 +38,23 @@ jobs:
         with:
           python-version: '3.9'
 
+      - name: Install Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: latest
+          cli_config_credentials_token: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Create JSON File from Secret
+        shell: bash
         run: |
           echo '${{ secrets.FIREBASE }}' > firebase_credentials.json
-        shell: bash
 
       - name: Create .env File from Secret
+        shell: bash
         run: |
           echo "${{ secrets.ENV_VAR }}" > .env
-        shell: bash
 
-      - name: Execute Make All
-        run: make all
+      - name: Deploy
+        shell: bash
+        run: |
+          make all

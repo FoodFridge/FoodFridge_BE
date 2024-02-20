@@ -5,8 +5,22 @@ from app.core.firebase import initialize_firebase_app, firestore
 from google.cloud.exceptions import NotFound
 
 class IngredientResource(Resource):
-    def get(self, user_id):
+    def get(self, localId):
         try:
+
+             # Check if 'Authorization' header exists
+            authorization_header = request.headers.get('Authorization')
+            if authorization_header and authorization_header.startswith('Bearer '):
+                id_token = authorization_header.split(' ')[1]
+            else:
+                # Return error response if 'Authorization' header is missing or invalid
+                return {"error": "Missing or invalid Authorization header"}, 401
+
+            # Verify the ID token before proceeding
+            decoded_token = auth.verify_id_token(id_token)
+
+            if not decoded_token['uid']:
+                return {"error": "uid invalid."}, 401
             # # Use initialize_firebase_app() in your code
             # initialize_firebase_app()
 
@@ -16,7 +30,7 @@ class IngredientResource(Resource):
             collection_ref2 = db.collection('pantry')
 
             # Construct the query
-            query = collection_ref2.where('user_id', '==', user_id)
+            query = collection_ref2.where('user_id', '==', localId)
 
             docs = collection_ref.stream()
             docs2 = query.stream()
@@ -30,7 +44,7 @@ class IngredientResource(Resource):
                 # Construct a dictionary to handle optional fields "user_id"
                 ingredient = {
                     "user_id": doc_dict.get("user_id", "Not specified"),
-                    "ingredient_id": doc_dict.get("ingredient_id"),
+                    "doc_id": doc.id,
                     "ingredient_name": doc_dict.get("ingredient_name"),
                     "ingredient_type_code": doc_dict.get("ingredient_type_code"),
                 }
@@ -39,13 +53,14 @@ class IngredientResource(Resource):
 
             for doc in docs2:
                 doc_dict2 = doc.to_dict()
-                pantrie = {
+
+                pantry = {
                     "user_id": doc_dict2.get("user_id"),
-                    "ingredient_id": doc_dict2.get("pantry_id"),
+                    "doc_id": doc.id,
                     "ingredient_name": doc_dict2.get("pantryName"),
                     "ingredient_type_code": doc_dict2.get("ingredient_type_code"),
                 }
-                data.append(pantrie)
+                data.append(pantry)
 
             response = {}
             if data:
