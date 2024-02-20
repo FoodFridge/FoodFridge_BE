@@ -9,3 +9,5 @@ venv
 __pycache__
 build
 lambda
+# Ignore Python bytecode files
+*.pyc
