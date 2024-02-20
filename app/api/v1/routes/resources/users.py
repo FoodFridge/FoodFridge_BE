@@ -270,3 +270,37 @@ class SignUpWithGoogle(Resource):
             return {'error': 'Invalid ID token'}, 400
         except Exception as e:
             return {'error': str(e)}, 400
+        
+class Update_Name(Resource):
+    def post(self, localId):
+        try:
+            authorization_header = request.headers.get('Authorization')
+            if authorization_header and authorization_header.startswith('Bearer '):
+                id_token = authorization_header.split(' ')[1]
+            else:
+                # Return error response if 'Authorization' header is missing or invalid
+                return {"error": "Missing or invalid Authorization header"}, 401
+
+                # Verify the ID token before proceeding
+            decoded_token = auth.verify_id_token(id_token)
+
+            if not decoded_token['uid']:
+                return {"error": "uid invalid."}, 401
+
+            data = request.get_json()
+            new_name = data.get('name')
+
+            db = firestore.client()
+            doc_ref = db.collection('users').document(localId)
+            doc_ref.update({"name": new_name})
+
+            response = {
+                "status": "success",
+                "message": "Document data updated successfully"
+            }
+            return response, 200
+
+        except Exception as e:
+            # Handle exceptions
+            error_message = f"An error occurred: {str(e)}"
+            return {"error": error_message}, 500    
