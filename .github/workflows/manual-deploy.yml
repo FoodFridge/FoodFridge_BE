@@ -22,7 +22,7 @@ jobs:
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: ${{ secrets.ARN_OIDC_ROLE }}
+          role-to-assume: ${{ vars.ARN_OIDC_ROLE }}
           aws-region: us-east-1
 
       - name: Identity Check
