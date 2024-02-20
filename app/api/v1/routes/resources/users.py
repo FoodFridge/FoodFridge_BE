@@ -322,7 +322,6 @@ class Update_Password(Resource):
             decoded_token = auth.verify_id_token(id_token)
             if not decoded_token['uid']:
                 return {"error": "Invalid uid in token"}, 401
-            print("yes")
 
             # Get new password from request data
             data = request.get_json()
