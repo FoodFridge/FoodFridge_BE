@@ -270,3 +270,69 @@ class SignUpWithGoogle(Resource):
             return {'error': 'Invalid ID token'}, 400
         except Exception as e:
             return {'error': str(e)}, 400
+        
+class Update_Name(Resource):
+    def post(self, localId):
+        try:
+            authorization_header = request.headers.get('Authorization')
+            if authorization_header and authorization_header.startswith('Bearer '):
+                id_token = authorization_header.split(' ')[1]
+            else:
+                # Return error response if 'Authorization' header is missing or invalid
+                return {"error": "Missing or invalid Authorization header"}, 401
+
+                # Verify the ID token before proceeding
+            decoded_token = auth.verify_id_token(id_token)
+
+            if not decoded_token['uid']:
+                return {"error": "uid invalid."}, 401
+
+            data = request.get_json()
+            new_name = data.get('name')
+
+            db = firestore.client()
+            doc_ref = db.collection('users').document(localId)
+            doc_ref.update({"name": new_name})
+
+            response = {
+                "status": "success",
+                "message": "Document data updated successfully"
+            }
+            return response, 200
+
+        except Exception as e:
+            # Handle exceptions
+            error_message = f"An error occurred: {str(e)}"
+            return {"error": error_message}, 500  
+
+
+
+class Update_Password(Resource):
+    def post(self):
+        try:
+            # Get Authorization header
+            authorization_header = request.headers.get('Authorization')
+            if authorization_header and authorization_header.startswith('Bearer '):
+                id_token = authorization_header.split(' ')[1]
+            else:
+                # Return error response if 'Authorization' header is missing or invalid
+                return {"error": "Missing or invalid Authorization header"}, 401
+
+            # Verify the ID token before proceeding
+            decoded_token = auth.verify_id_token(id_token)
+            if not decoded_token['uid']:
+                return {"error": "Invalid uid in token"}, 401
+
+            # Get new password from request data
+            data = request.get_json()
+            new_password = data.get('password')
+
+            # Update password using Firebase Authentication
+            user = auth.update_user(decoded_token['uid'], password=new_password)
+
+            # Return success response
+            return {"message": "Password updated successfully"}, 200
+
+        except Exception as e:
+            # Return error response if any exception occurs
+            return {"error": str(e)}, 500
