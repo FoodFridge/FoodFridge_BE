@@ -2,7 +2,7 @@ from flask import request
 from flask_restful import Resource
 from app.core.firebase import firestore
 from datetime import datetime
-import pytz,re,datetime
+import pytz,re
 from firebase_admin import auth
 
 

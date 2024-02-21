@@ -5,37 +5,37 @@ from app.core.firebase import initialize_firebase_app, firestore
 from google.cloud.exceptions import NotFound
 
 class IngredientResource(Resource):
-    def get(self, localId):
+    def post(self):
         try:
 
-             # Check if 'Authorization' header exists
-            authorization_header = request.headers.get('Authorization')
-            if authorization_header and authorization_header.startswith('Bearer '):
-                id_token = authorization_header.split(' ')[1]
-            else:
-                # Return error response if 'Authorization' header is missing or invalid
-                return {"error": "Missing or invalid Authorization header"}, 401
+            data = request.get_json()
+            localId = data.get('localId')
+            
 
-            # Verify the ID token before proceeding
-            decoded_token = auth.verify_id_token(id_token)
+            if localId:
+                # Check if 'Authorization' header exists
+                authorization_header = request.headers.get('Authorization')
+                if authorization_header and authorization_header.startswith('Bearer '):
+                    id_token = authorization_header.split(' ')[1]
+                else:
+                    # Return error response if 'Authorization' header is missing or invalid
+                    return {"error": "Missing or invalid Authorization header"}, 401
 
-            if not decoded_token['uid']:
-                return {"error": "uid invalid."}, 401
+                # Verify the ID token before proceeding
+                decoded_token = auth.verify_id_token(id_token)
+
+                if not decoded_token['uid']:
+                    return {"error": "uid invalid."}, 401
+                
             # # Use initialize_firebase_app() in your code
             # initialize_firebase_app()
 
             db = firestore.client()
-
-            collection_ref = db.collection('ingredient')
             collection_ref2 = db.collection('pantry')
-
-            # Construct the query
             query = collection_ref2.where('user_id', '==', localId)
-
+            collection_ref = db.collection('ingredient')
             docs = collection_ref.stream()
             docs2 = query.stream()
-
-            
 
             data = []
             for doc in docs:
