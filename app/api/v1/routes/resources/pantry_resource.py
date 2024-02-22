@@ -114,7 +114,7 @@ class AddPantryResource(Resource):
             pantry= {
                 'date': datetime.now(),
                 'pantryName': pantryName,
-                'ingredient_type_code': '08',
+                'ingredient_type_code': '12',
                 'user_id': localId,
             }
 

@@ -132,3 +132,28 @@ class IngredientResourceWithCategory(Resource):
 
 
 
+class AddIngredients(Resource):
+    def post(self):
+        try:
+            db = firestore.client()
+            data = request.get_json()
+
+            ingredient_id = data.get('ingredient_id')
+            ingredient_name = data.get('ingredient_name')
+            ingredient_type_code = data.get('ingredient_type_code')
+            collection_ref = db.collection('ingredient')
+
+            ingredient = {
+                'ingredient_id': ingredient_id,
+                'ingredient_name': ingredient_name,
+                'ingredient_type_code': ingredient_type_code,
+            }
+
+            collection_ref.document().set(ingredient)
+
+            return {"success": "added to collection 'Ingredient'"}
+
+        except Exception as e:
+            # Handle the exception and return an appropriate response
+            error_message = f"An error occurred: {str(e)}"
+            return {"error": error_message}, 500
