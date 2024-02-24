@@ -41,7 +41,7 @@ jobs:
       - name: Install Terraform
         uses: hashicorp/setup-terraform@v3
         with:
-          terraform_version: latest
+          terraform_version: 1.7.3
           cli_config_credentials_token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Create JSON File from Secret
