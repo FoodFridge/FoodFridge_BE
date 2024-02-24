@@ -42,9 +42,9 @@ upload:
 	aws s3 cp $(ZIP_FILE) s3://$(S3_BUCKET)/$(ZIP_FILE)
 
 plan:
-	cd $(INFRA_DIR) && $(TERRAFORM) init && $(TERRAFORM) plan
+	cd $(INFRA_DIR) && $(TERRAFORM) init && $(TERRAFORM) plan -var "lambda_zip_file=$(ZIP_FILE)"
 
-deploy: build upload
+deploy:
 	cd $(INFRA_DIR) && $(TERRAFORM) apply -auto-approve -var "lambda_zip_file=$(ZIP_FILE)"
 
 destroy:
@@ -54,4 +54,4 @@ clean:
 	rm -f lambda-*.zip
 	rm -rf build
 
-all: install plan deploy
+all: install build upload plan deploy
