@@ -148,6 +148,9 @@ class Sign_up_with_email_and_password(Resource):
 
 class Logout(Resource):
     def post(self):
+        return {'message': 'Logout successful'}, 200      
+    '''
+    def post(self):
 
         # headers = request.headers
 
@@ -183,7 +186,7 @@ class Logout(Resource):
         else:
             return {'error': 'Authorization header missing'}, 400
     
-
+    '''
 class LoginWithGoogle(Resource):
     def post(self):
         id_token = request.json.get('idToken')
