@@ -148,7 +148,12 @@ class Sign_up_with_email_and_password(Resource):
 
 class Logout(Resource):
     def post(self):
-        return {'message': 'Logout successful'}, 200      
+        response = {
+                    "status": "1",
+                    "message": "log out successfully",
+                }  
+
+        return response, 200      
     '''
     def post(self):
 
