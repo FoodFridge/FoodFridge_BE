@@ -4,7 +4,7 @@ from flask import Flask
 from flask_restful import Api
 from app.core.firebase import initialize_firebase_app
 from app.api.v1.routes.resources.alpha_resource import AlphaResource
-from app.api.v1.routes.resources.ingredient_resource import IngredientResource ,IngredientResourceWithCategory
+from app.api.v1.routes.resources.ingredient_resource import IngredientResource ,IngredientResourceWithCategory, AddIngredients
 from app.api.v1.routes.resources.favorite_resource import AddFavoriteResource, FavoriteResourceByUser
 from app.api.v1.routes.resources.recipe_resource import GenerateRecipeFromIngredients
 from app.api.v1.routes.resources.link_recipe_resource import LinkRecipeResource
@@ -27,6 +27,7 @@ api.add_resource(IngredientResourceWithCategory, '/api/v1/ingredient/<string:cat
 api.add_resource(AddFavoriteResource, '/api/v1/favorite')
 api.add_resource(FavoriteResourceByUser, '/api/v1/favorite/<string:localId>/<string:is_favorite>')
 api.add_resource(GenerateRecipeFromIngredients, '/api/v1/GenerateRecipe')
+api.add_resource(AddIngredients, '/api/v1/addIngredients')
 api.add_resource(LinkRecipeResource, '/api/v1/LinkRecipe')
 api.add_resource(PantryResourceByUser, '/api/v1/pantry/<string:localId>')
 api.add_resource(AddPantryResource, '/api/v1/pantry/add/<string:localId>')
