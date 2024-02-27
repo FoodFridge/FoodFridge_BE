@@ -11,7 +11,6 @@ from app.api.v1.routes.resources.link_recipe_resource import LinkRecipeResource
 from app.api.v1.routes.resources.pantry_resource import PantryResourceByUser, AddPantryResource, EditPantryResource, DeletePantryResource
 
 from app.api.v1.routes.resources.users import Login_with_email_and_password, Logout, Sign_up_with_email_and_password,LoginWithGoogle,SignUpWithGoogle, Update_Name, Update_Password
-
 import awsgi
 
 app = Flask(__name__)
