@@ -10,7 +10,8 @@ class IngredientResource(Resource):
 
             data = request.get_json()
             localId = data.get('localId')
-            
+            db = firestore.client()
+            data = []
 
             if localId:
                 # Check if 'Authorization' header exists
@@ -27,17 +28,24 @@ class IngredientResource(Resource):
                 if not decoded_token['uid']:
                     return {"error": "uid invalid."}, 401
                 
-            # # Use initialize_firebase_app() in your code
-            # initialize_firebase_app()
+                collection_ref2 = db.collection('pantry')
+                query = collection_ref2.where('user_id', '==', localId)
+                docs2 = query.stream()
 
-            db = firestore.client()
-            collection_ref2 = db.collection('pantry')
-            query = collection_ref2.where('user_id', '==', localId)
+                for doc in docs2:
+                    doc_dict2 = doc.to_dict()
+
+                    pantry = {
+                        "user_id": doc_dict2.get("user_id"),
+                        "doc_id": doc.id,
+                        "ingredient_name": doc_dict2.get("pantryName"),
+                        "ingredient_type_code": doc_dict2.get("ingredient_type_code"),
+                    }
+                    data.append(pantry)
+     
             collection_ref = db.collection('ingredient')
             docs = collection_ref.stream()
-            docs2 = query.stream()
-
-            data = []
+            
             for doc in docs:
                 doc_dict = doc.to_dict()
 
@@ -50,17 +58,6 @@ class IngredientResource(Resource):
                 }
                 
                 data.append(ingredient)
-
-            for doc in docs2:
-                doc_dict2 = doc.to_dict()
-
-                pantry = {
-                    "user_id": doc_dict2.get("user_id"),
-                    "doc_id": doc.id,
-                    "ingredient_name": doc_dict2.get("pantryName"),
-                    "ingredient_type_code": doc_dict2.get("ingredient_type_code"),
-                }
-                data.append(pantry)
 
             response = {}
             if data:
