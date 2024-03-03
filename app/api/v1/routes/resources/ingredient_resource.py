@@ -1,39 +1,38 @@
 from flask import request, jsonify
 from flask_restful import Resource
 from firebase_admin import auth, initialize_app, credentials
+from app.api.v1.routes.resources.auth_resource import authorization, messageWithStatusCode
 from app.core.firebase import initialize_firebase_app, firestore
 from google.cloud.exceptions import NotFound
+import jwt
+from datetime import datetime, timedelta
+from dotenv import load_dotenv
+import os
 
 class IngredientResource(Resource):
     def post(self):
         try:
-
             data = request.get_json()
             localId = data.get('localId')
             db = firestore.client()
             data = []
 
             if localId:
-                # Check if 'Authorization' header exists
-                authorization_header = request.headers.get('Authorization')
-                if authorization_header and authorization_header.startswith('Bearer '):
-                    id_token = authorization_header.split(' ')[1]
-                else:
-                    # Return error response if 'Authorization' header is missing or invalid
-                    return {"error": "Missing or invalid Authorization header"}, 401
+                #authen
+                code = authorization(localId)
+                print("code",code)
+                if code != "":
+                    message = messageWithStatusCode(code)
+                    return {'message': message},code
 
-                # Verify the ID token before proceeding
-                decoded_token = auth.verify_id_token(id_token)
 
-                if not decoded_token['uid']:
-                    return {"error": "uid invalid."}, 401
-                
                 collection_ref2 = db.collection('pantry')
                 query = collection_ref2.where('user_id', '==', localId)
                 docs2 = query.stream()
 
                 for doc in docs2:
                     doc_dict2 = doc.to_dict()
+                    print("doc_dict2",doc_dict2)
 
                     pantry = {
                         "user_id": doc_dict2.get("user_id"),
