@@ -244,7 +244,7 @@ class RefreshTokenResource(Resource):
 
 
 # auth with google
-class LoginWithGoogleResource(Resource):
+class AuthWithAppResource(Resource):
     # login ด้วย google or apple
     def post(self):
         # idToken = request.json.get('idToken')

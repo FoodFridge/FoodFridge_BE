@@ -12,7 +12,7 @@ from app.api.v1.routes.resources.pantry_resource import PantryResourceByUser, Ad
 
 from app.api.v1.routes.resources.users import Login_with_email_and_password, Logout, Sign_up_with_email_and_password,LoginWithGoogle,SignUpWithGoogle, Update_Name, Update_Password
 
-from app.api.v1.routes.resources.auth_resource import LoginWithEmailAndPasswordResource,LogoutResource,RefreshTokenResource,LoginWithGoogleResource,SignupWithEmailAndPasswordResource,UpdateProfileResource,UpdatePasswordResource
+from app.api.v1.routes.resources.auth_resource import LoginWithEmailAndPasswordResource,LogoutResource,RefreshTokenResource,AuthWithAppResource,SignupWithEmailAndPasswordResource,UpdateProfileResource,UpdatePasswordResource
 
 
 import awsgi
@@ -49,7 +49,7 @@ api.add_resource(Logout, '/logout')
 api.add_resource(LoginWithEmailAndPasswordResource, '/api/v1/LoginWithEmailAndPassword') # auth with email , password
 api.add_resource(LogoutResource, '/api/v1/Logout') # logout
 api.add_resource(RefreshTokenResource, '/api/v1/RefreshToken') # refresh token
-api.add_resource(LoginWithGoogleResource, '/api/v1/LoginWithGoogle') # refresh token
+api.add_resource(AuthWithAppResource, '/api/v1/AuthWithApp') # refresh token
 api.add_resource(SignupWithEmailAndPasswordResource, '/api/v1/SignupWithEmailAndPassword') # refresh token
 api.add_resource(UpdateProfileResource, '/api/v1/UpdateProfile')
 api.add_resource(UpdatePasswordResource, '/api/v1/UpdatePassword')
