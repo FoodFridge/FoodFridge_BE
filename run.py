@@ -14,8 +14,8 @@ from app.api.v1.routes.resources.users import Login_with_email_and_password, Log
 
 from app.api.v1.routes.resources.auth_resource import LoginWithEmailAndPasswordResource,LogoutResource,RefreshTokenResource,AuthWithAppResource,SignupWithEmailAndPasswordResource,UpdateProfileResource,UpdatePasswordResource
 
-
-import awsgi
+from app.api.v1.routes.resources.LinkRecipeResource2 import LinkRecipeResource2
+# import awsgi
 
 app = Flask(__name__)
 api = Api(app)
@@ -44,6 +44,7 @@ api.add_resource(Update_Password, '/update_password')
 api.add_resource(LoginWithGoogle, '/login_with_google')
 api.add_resource(SignUpWithGoogle, '/sign_up_with_google')
 api.add_resource(Logout, '/logout')
+api.add_resource(LinkRecipeResource2, '/api/v1/LinkRecipe2')
 
 # update 03.03.24
 api.add_resource(LoginWithEmailAndPasswordResource, '/api/v1/LoginWithEmailAndPassword') # auth with email , password
