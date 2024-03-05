@@ -7,6 +7,7 @@ from dotenv import load_dotenv
 import os
 import jwt
 from datetime import datetime, timedelta
+import pytz
 
 load_dotenv()
 # JWT Secret Key (Should be kept secret)
@@ -43,7 +44,7 @@ def messageWithStatusCode(choice):
     message_func = switch.get(choice, lambda: "Invalid choice")
     return message_func()
 
-def authorization(localId):
+def authorization(localId,user_timezone):
     statusCode = ""
     authorization_header = request.headers.get('Authorization')
     if authorization_header and authorization_header.startswith('Bearer '):
@@ -71,7 +72,23 @@ def authorization(localId):
         payload = jwt.decode(jwt_token, JWT_SECRET_KEY, algorithms=["HS256"])
         print("payload",payload)
         # Check token expiration
-        if datetime.utcnow() > datetime.fromtimestamp(payload['exp']):
+        # issue timezone
+        # if datetime.utcnow() > datetime.fromtimestamp(payload['exp']):
+            # statusCode = 401
+
+        user_timezone = pytz.timezone(user_timezone)
+
+        # Get the current time in the user's timezone
+        current_time = datetime.now(user_timezone)
+
+        # Assuming payload['exp'] contains a timestamp in UTC
+        exp_timestamp = payload['exp']
+
+        # Convert the expiration timestamp to the user's timezone
+        exp_datetime = datetime.fromtimestamp(exp_timestamp, pytz.utc).astimezone(user_timezone)
+
+        # Compare the current time with the expiration datetime
+        if current_time > exp_datetime:
             statusCode = 401
     else:
         statusCode = 401

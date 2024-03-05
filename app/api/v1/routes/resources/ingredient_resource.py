@@ -17,9 +17,10 @@ class IngredientResource(Resource):
             db = firestore.client()
             data = []
 
+            user_timezone = request.headers.get('User-Timezone')
             if localId:
                 #authen
-                code = authorization(localId)
+                code = authorization(localId,user_timezone)
                 print("code",code)
                 if code != "":
                     message = messageWithStatusCode(code)
