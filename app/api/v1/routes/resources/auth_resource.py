@@ -111,9 +111,14 @@ def generate_jwt_token(localId):
         'localId': localId,
         'exp': expiration_time
     }
+
+    print("expiration_time",expiration_time)
+
     # Encode JWT token with secret key
     jwt_token = jwt.encode(payload, JWT_SECRET_KEY, algorithm='HS256')
     return jwt_token
+    # Return JWT token as an array
+    # return [jwt_token,expiration_time.isoformat()]
 
 # Function to generate refresh token
 def generate_refresh_token(localId):
@@ -160,12 +165,21 @@ class LoginWithEmailAndPasswordResource(Resource):
                 print(docs)
 
                 token = generate_jwt_token(localId)
+                # token = arr[0]
+                # exp = arr[1]
                 refresh_token = generate_refresh_token(localId)
+
+
+                # JWT Secret Key (Should be kept secret)
+                JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY")
+                payload = jwt.decode(token, JWT_SECRET_KEY, algorithms=["HS256"])
+        
 
                 data = {
                     "localId": localId,
                     "token": token,
-                    "refreshToken": refresh_token
+                    "refreshToken": refresh_token,
+                    "expTime": payload['exp']
                 }
 
                 response = {
@@ -287,10 +301,17 @@ class AuthWithAppResource(Resource):
 
                 token = generate_jwt_token(localId)
                 refresh_token = generate_refresh_token(localId)
+
+                # JWT Secret Key (Should be kept secret)
+                JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY")
+                payload = jwt.decode(token, JWT_SECRET_KEY, algorithms=["HS256"])
+                
+
                 data = {
                     "localId": localId,
                     "token": token,
                     "refreshToken": refresh_token,
+                    "expTime": payload['exp']
                 }
                     
                 response = {
