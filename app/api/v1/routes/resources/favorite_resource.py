@@ -2,24 +2,32 @@ from flask import request, jsonify
 from flask_restful import Resource
 from firebase_admin import auth, initialize_app, credentials
 from app.core.firebase import initialize_firebase_app, firestore
+from app.api.v1.routes.resources.auth_resource import authorization, messageWithStatusCode
 # import logging
 class FavoriteResourceByUser(Resource):
     def get(self,localId,is_favorite):
         try:
 
             # Check if 'Authorization' header exists
-            authorization_header = request.headers.get('Authorization')
-            if authorization_header and authorization_header.startswith('Bearer '):
-                id_token = authorization_header.split(' ')[1]
-            else:
-                # Return error response if 'Authorization' header is missing or invalid
-                return {"error": "Missing or invalid Authorization header"}, 401
+            # authorization_header = request.headers.get('Authorization')
+            # if authorization_header and authorization_header.startswith('Bearer '):
+            #     id_token = authorization_header.split(' ')[1]
+            # else:
+            #     # Return error response if 'Authorization' header is missing or invalid
+            #     return {"error": "Missing or invalid Authorization header"}, 401
 
-            # Verify the ID token before proceeding
-            decoded_token = auth.verify_id_token(id_token)
+            # # Verify the ID token before proceeding
+            # decoded_token = auth.verify_id_token(id_token)
 
-            if not decoded_token['uid']:
-                return {"error": "uid invalid."}, 401
+            # if not decoded_token['uid']:
+            #     return {"error": "uid invalid."}, 401
+            user_timezone = request.headers.get('User-Timezone')
+
+            code = authorization(localId,user_timezone)
+            print("code",code)
+            if code != "":
+                message = messageWithStatusCode(code)
+                return {'message': message},code
         
             db = firestore.client()
             collection_ref = db.collection('favorite')

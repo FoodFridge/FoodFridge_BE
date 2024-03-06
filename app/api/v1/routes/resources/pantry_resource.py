@@ -4,27 +4,31 @@ from app.core.firebase import firestore
 from datetime import datetime
 import pytz,re
 from firebase_admin import auth
+from app.api.v1.routes.resources.auth_resource import authorization, messageWithStatusCode
 
 
 class PantryResourceByUser(Resource):
     def get(self, localId):
         try:
 
-            authorization_header = request.headers.get('Authorization')
-            if authorization_header and authorization_header.startswith('Bearer '):
-                id_token = authorization_header.split(' ')[1]
-            else:
-                # Return error response if 'Authorization' header is missing or invalid
-                return {"error": "Missing or invalid Authorization header"}, 401
+            # authorization_header = request.headers.get('Authorization')
+            # if authorization_header and authorization_header.startswith('Bearer '):
+            #     id_token = authorization_header.split(' ')[1]
+            # else:
+            #     # Return error response if 'Authorization' header is missing or invalid
+            #     return {"error": "Missing or invalid Authorization header"}, 401
 
-            # Verify the ID token before proceeding
-            decoded_token = auth.verify_id_token(id_token)
+            # # Verify the ID token before proceeding
+            # decoded_token = auth.verify_id_token(id_token)
 
-            if not decoded_token['uid']:
-                return {"error": "uid invalid."}, 401
-
-
+            # if not decoded_token['uid']:
+            #     return {"error": "uid invalid."}, 401
             user_timezone = request.headers.get('User-Timezone')
+            code = authorization(localId, user_timezone)
+            print("code",code)
+            if code != "":
+                message = messageWithStatusCode(code)
+                return {'message': message},code
 
            # Regular expression pattern to match "America" in a case-insensitive manner
             pattern = re.compile(r'(?i)America')
@@ -35,6 +39,7 @@ class PantryResourceByUser(Resource):
             db = firestore.client()
             collection_ref = db.collection('pantry')
             docs = collection_ref.stream()
+            
 
             data = []
             for doc in docs:
@@ -47,6 +52,7 @@ class PantryResourceByUser(Resource):
 
                     # กำหนดโซนเวลาของไทย
                     thai_timezone = pytz.timezone(user_timezone)
+                    
 
                     # แปลงเวลา UTC เป็นเวลาในโซนเวลาไทย
                     local_time = utc_time_from_firebase.astimezone(thai_timezone)
@@ -59,7 +65,7 @@ class PantryResourceByUser(Resource):
                     doc_data['date'] = formatted_date
                     # doc_data['date'] = doc_data['date'].date().isoformat()
                 data.append(doc_data)
-            print(data)
+            print('้here', data)
             if data:
                 filtered_data = [item for item in data if item.get("user_id") == localId]
                 print(filtered_data)

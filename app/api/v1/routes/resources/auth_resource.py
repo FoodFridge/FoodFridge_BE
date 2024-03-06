@@ -64,17 +64,19 @@ def authorization(localId,user_timezone):
         if data_blacklist:
             statusCode = 500
            
-                      
+        
         load_dotenv()
         # JWT Secret Key (Should be kept secret)
         JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY")
         # Verify JWT token
         payload = jwt.decode(jwt_token, JWT_SECRET_KEY, algorithms=["HS256"])
+        
         print("payload",payload)
         # Check token expiration
         # issue timezone
         # if datetime.utcnow() > datetime.fromtimestamp(payload['exp']):
             # statusCode = 401
+        
 
         user_timezone = pytz.timezone(user_timezone)
 
