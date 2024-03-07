@@ -16,7 +16,6 @@ class IngredientResource(Resource):
             localId = data.get('localId')
             db = firestore.client()
             data = []
-
             user_timezone = request.headers.get('User-Timezone')
             if localId:
                 #authen

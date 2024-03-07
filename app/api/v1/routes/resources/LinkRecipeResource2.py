@@ -2,6 +2,7 @@ from flask import request, jsonify
 from flask_restful import Resource
 from firebase_admin import auth, initialize_app, credentials
 from app.core.firebase import initialize_firebase_app, firestore
+from app.api.v1.routes.resources.auth_resource import authorization, messageWithStatusCode
 import requests
 from dotenv import load_dotenv
 import os
@@ -70,20 +71,28 @@ class LinkRecipeResource2(Resource):
                                 for thumbnail in cse_image:
                                     # Access the 'src' value within the thumbnail
                                     img = thumbnail.get('src', '')
+                                    if img.startswith('https://'):
 
-                                favorite = {
-                                    "favId": 'None',
-                                    'img': img,
-                                    "title": recipe_name,
-                                    'url': link,
-                                    'title': title,
-                                    "isFavorite": 'None',
-                                    "userId": 'None'
-                                    # Add more fields as needed
-                                }
-                                links.append(favorite)
+                                        favorite = {
+                                            "favId": 'None',
+                                            'img': img,
+                                            "title": recipe_name,
+                                            'url': link,
+                                            'title': title,
+                                            "isFavorite": 'None',
+                                            "userId": 'None'
+                                            # Add more fields as needed
+                                        }
+                                    links.append(favorite)
 
                         else:
+                            user_timezone = request.headers.get('User-Timezone')
+
+                            code = authorization(localId,user_timezone)
+                            print("code",code)
+                            if code != "":
+                                message = messageWithStatusCode(code)
+                                return {'message': message},code
                 
                             collection_ref = db.collection('favorite')
                             # docs = collection_ref.stream()
@@ -118,25 +127,26 @@ class LinkRecipeResource2(Resource):
                                     for thumbnail in cse_image:
                                         # Access the 'src' value within the thumbnail
                                         img = thumbnail.get('src', '')
+                                        if img.startswith('https://'):
 
-                                    favorite = {
-                                        "status": 'N',
-                                        'img': img,
-                                        'recipe_name': recipe_name,
-                                        'title': title,
-                                        'url': link,
-                                        'user_id': localId,
-                                    # Add more fields as needed
-                                    }
+                                            favorite = {
+                                                "status": 'N',
+                                                'img': img,
+                                                'recipe_name': recipe_name,
+                                                'title': title,
+                                                'url': link,
+                                                'user_id': localId,
+                                                # Add more fields as needed
+                                            }
 
-                                    # Reference to the 'favorite' collection
-                                    collection_ref = db.collection('favorite')
+                                        # Reference to the 'favorite' collection
+                                        collection_ref = db.collection('favorite')
 
-                                    # Create a new document reference in the batch
-                                    document_ref = collection_ref.document()
+                                        # Create a new document reference in the batch
+                                        document_ref = collection_ref.document()
 
-                                    # Set data for the document in the batch
-                                    batch.set(document_ref, favorite)
+                                        # Set data for the document in the batch
+                                        batch.set(document_ref, favorite)
 
                         # Commit the batch
                         batch.commit()
@@ -190,7 +200,7 @@ class LinkRecipeResource2(Resource):
                         }
                     return response, 200
                         
-                    
+
                 else:
                     if links:
                         response = {
