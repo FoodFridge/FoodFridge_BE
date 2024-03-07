@@ -15,7 +15,7 @@ from app.api.v1.routes.resources.users import Login_with_email_and_password, Log
 from app.api.v1.routes.resources.auth_resource import LoginWithEmailAndPasswordResource,LogoutResource,RefreshTokenResource,AuthWithAppResource,SignupWithEmailAndPasswordResource,UpdateProfileResource,UpdatePasswordResource
 
 from app.api.v1.routes.resources.LinkRecipeResource2 import LinkRecipeResource2
-# import awsgi
+import awsgi
 
 app = Flask(__name__)
 api = Api(app)
