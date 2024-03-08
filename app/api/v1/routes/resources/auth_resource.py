@@ -269,7 +269,12 @@ class RefreshTokenResource(Resource):
 
             # Generate new JWT token
             new_jwt_token = generate_jwt_token(username)
-            return {'message': 'Token refreshed successfully', 'token': new_jwt_token}, 200
+
+            # JWT Secret Key (Should be kept secret)
+            JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY")
+            payload = jwt.decode(new_jwt_token, JWT_SECRET_KEY, algorithms=["HS256"])
+            
+            return {'message': 'Token refreshed successfully', 'token': new_jwt_token,'expTime':payload['exp']}, 200
         except jwt.ExpiredSignatureError:
             return {'message': 'Refresh token has expired'}, 401
         except jwt.InvalidTokenError:
