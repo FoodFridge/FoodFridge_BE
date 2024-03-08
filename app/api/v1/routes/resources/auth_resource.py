@@ -266,12 +266,12 @@ class RefreshTokenResource(Resource):
                 refresh_token, JWT_SECRET_KEY, algorithms=["HS256"])
             username = refresh_payload['localId']
             print("username",username)
-
+            load_dotenv()
             # Generate new JWT token
             new_jwt_token = generate_jwt_token(username)
 
             # JWT Secret Key (Should be kept secret)
-            JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY")
+            # JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY")
             payload = jwt.decode(new_jwt_token, JWT_SECRET_KEY, algorithms=["HS256"])
             
             return {'message': 'Token refreshed successfully', 'token': new_jwt_token,'expTime':payload['exp']}, 200
