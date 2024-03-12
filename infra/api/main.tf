@@ -42,6 +42,7 @@ resource "aws_lambda_function" "foodfridge_api_lambda" {
   function_name = "api-lambda"
   handler       = "run.lambda_handler"
   runtime       = "python3.11"
+  timeout       = 60
 
   role = aws_iam_role.lambda_exec_role.arn
 
