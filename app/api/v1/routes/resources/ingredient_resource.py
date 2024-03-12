@@ -15,7 +15,7 @@ class IngredientResource(Resource):
             data = request.get_json()
             localId = data.get('localId')
             db = firestore.client()
-            collection_ref2 = db.collection('pantry')
+
             data = []
             user_timezone = request.headers.get('User-Timezone')
             if localId:
@@ -25,33 +25,40 @@ class IngredientResource(Resource):
                 if code != "":
                     message = messageWithStatusCode(code)
                     return {'message': message},code
+                
+                collection_ref2 = db.collection('pantry')
                 query = collection_ref2.where('user_id', '==', localId)
                 docs2 = query.stream()
 
-                for doc in docs2:
-                    doc_dict2 = doc.to_dict()
-                    print("doc_dict2", doc_dict2)
+                if docs2:
+                    for doc in docs2:
+                        doc_dict2 = doc.to_dict()
+                        print("doc_dict2", doc_dict2)
 
-                    pantry = {
-                        "user_id": doc_dict2.get("user_id"),
-                        "doc_id": doc.id,
-                        "ingredient_name": doc_dict2.get("pantryName"),
-                        "ingredient_type_code": doc_dict2.get("ingredient_type_code"),
-                    }
-                    data.append(pantry)
-            else:
-                query = collection_ref2
-                docs2 = query.stream()
-                for doc in docs2:
-                    doc_dict2 = doc.to_dict()
-
+                        pantry = {
+                            "user_id": doc_dict2.get("user_id"),
+                            "doc_id": doc.id,
+                            "ingredient_name": doc_dict2.get("pantryName"),
+                            "ingredient_type_code": doc_dict2.get("ingredient_type_code"),
+                        }
+                        data.append(pantry)
+                else:
                     pantry = {
                         "user_id": '',
                         "doc_id": '',
                         "ingredient_name": '',
-                        "ingredient_type_code": doc_dict2.get("ingredient_type_code"),
+                        "ingredient_type_code": '01',
                     }
                     data.append(pantry)
+
+            else:
+                pantry = {
+                    "user_id": '',
+                    "doc_id": '',
+                    "ingredient_name": '',
+                    "ingredient_type_code": '01',
+                }
+                data.append(pantry)
 
             collection_ref = db.collection('ingredient')
             docs = collection_ref.stream()
