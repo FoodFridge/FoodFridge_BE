@@ -29,20 +29,23 @@ class IngredientResource(Resource):
                 collection_ref2 = db.collection('pantry')
                 query = collection_ref2.where('user_id', '==', localId)
                 docs2 = query.stream()
+                
+                
 
-                if docs2:
-                    for doc in docs2:
-                        doc_dict2 = doc.to_dict()
-                        print("doc_dict2", doc_dict2)
-
-                        pantry = {
-                            "user_id": doc_dict2.get("user_id"),
-                            "doc_id": doc.id,
-                            "ingredient_name": doc_dict2.get("pantryName"),
-                            "ingredient_type_code": doc_dict2.get("ingredient_type_code"),
-                        }
-                        data.append(pantry)
-                else:
+                pantries = []
+                for doc in docs2:
+                    doc_dict2 = doc.to_dict()
+                    print("doc_dict2", doc_dict2)
+                    pantry = {
+                        "user_id": doc_dict2.get("user_id"),
+                        "doc_id": doc.id,
+                        "ingredient_name": doc_dict2.get("pantryName"),
+                        "ingredient_type_code": doc_dict2.get("ingredient_type_code"),
+                    }
+                    pantries.push(pantry)
+                    data.append(pantry)
+                    
+                if not pantries:
                     pantry = {
                         "user_id": '',
                         "doc_id": '',
