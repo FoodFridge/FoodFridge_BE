@@ -32,7 +32,7 @@ class IngredientResource(Resource):
 
                 for doc in docs2:
                     doc_dict2 = doc.to_dict()
-                    print("doc_dict2",doc_dict2)
+                    print("doc_dict2", doc_dict2)
 
                     pantry = {
                         "user_id": doc_dict2.get("user_id"),
@@ -41,6 +41,14 @@ class IngredientResource(Resource):
                         "ingredient_type_code": doc_dict2.get("ingredient_type_code"),
                     }
                     data.append(pantry)
+            else:
+                pantry = {
+                        "user_id": '',
+                        "doc_id": '',
+                        "ingredient_name": '',
+                        "ingredient_type_code": '',
+                    }
+                data.append(pantry)
 
             collection_ref = db.collection('ingredient')
             docs = collection_ref.stream()
