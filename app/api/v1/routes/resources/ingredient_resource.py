@@ -41,10 +41,10 @@ class IngredientResource(Resource):
                         "ingredient_type_code": doc_dict2.get("ingredient_type_code"),
                     }
                     data.append(pantry)
-     
+
             collection_ref = db.collection('ingredient')
             docs = collection_ref.stream()
-            
+
             for doc in docs:
                 doc_dict = doc.to_dict()
 
@@ -55,7 +55,7 @@ class IngredientResource(Resource):
                     "ingredient_name": doc_dict.get("ingredient_name"),
                     "ingredient_type_code": doc_dict.get("ingredient_type_code"),
                 }
-                
+
                 data.append(ingredient)
 
             response = {}
@@ -78,9 +78,10 @@ class IngredientResource(Resource):
         except Exception as e:
             # Handle the exception and return an appropriate response
             error_message = f"An error occurred: {str(e)}"
+            print(error_message)
             return {"error": error_message}, 500
 
-    
+
 
 class IngredientResourceWithCategory(Resource):
     def get(self, category):
