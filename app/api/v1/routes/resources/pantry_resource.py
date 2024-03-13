@@ -1,28 +1,16 @@
-from flask import request
+from flask import jsonify, request
 from flask_restful import Resource
 from app.core.firebase import firestore
 from datetime import datetime
 import pytz,re
-from firebase_admin import auth
 from app.api.v1.routes.resources.auth_resource import authorization, messageWithStatusCode
+import json
 
 
 class PantryResourceByUser(Resource):
     def get(self, localId):
         try:
 
-            # authorization_header = request.headers.get('Authorization')
-            # if authorization_header and authorization_header.startswith('Bearer '):
-            #     id_token = authorization_header.split(' ')[1]
-            # else:
-            #     # Return error response if 'Authorization' header is missing or invalid
-            #     return {"error": "Missing or invalid Authorization header"}, 401
-
-            # # Verify the ID token before proceeding
-            # decoded_token = auth.verify_id_token(id_token)
-
-            # if not decoded_token['uid']:
-            #     return {"error": "uid invalid."}, 401
             user_timezone = request.headers.get('User-Timezone')
             code = authorization(localId, user_timezone)
             print("code",code)
@@ -65,7 +53,7 @@ class PantryResourceByUser(Resource):
                     doc_data['date'] = formatted_date
                     # doc_data['date'] = doc_data['date'].date().isoformat()
                 data.append(doc_data)
-            print('้here', data)
+
             if data:
                 filtered_data = [item for item in data if item.get("user_id") == localId]
                 print(filtered_data)
@@ -186,3 +174,35 @@ class DeletePantryResource(Resource):
             # Handle exceptions
             error_message = f"An error occurred: {str(e)}"
             return {"error": error_message}, 500
+
+
+class SearchIngredientResource(Resource):
+    def post(self):
+        try:
+            # Read data from ingredients.json file
+            with open("ingredients.json", "r") as file:
+                data = json.load(file)
+
+            # print('data', data)
+
+            # Process the data as needed
+            # For example, you can filter based on the ingredient parameter
+
+            # Assuming 'ingredient' is a parameter from the GET request
+            data2 = request.get_json()
+            ingredient = data2.get('ingredient')
+
+            # Perform search logic using 'ingredient' and 'data'
+            matching_results = []
+            for item in data:
+                if ingredient.lower() in item.lower():  # Case-insensitive search
+                    
+                    matching_results.append(item)
+            
+            # print(matching_results)
+
+            return matching_results, 200
+
+        except Exception as e:
+            # Handle exceptions
+            return {"error": str(e)}, 500  # Placeholder error response
