@@ -49,12 +49,8 @@ jobs:
         shell: bash
         run: |
           echo '${{ secrets.FIREBASE }}' > firebase_credentials.json
-          ls -la
-
-      - name: Create .env File from Secret
-        shell: bash
-        run: |
           echo "${{ secrets.ENV_VAR }}" > .env
+          ls -la
 
       - name: Deploy
         working-directory: ./
