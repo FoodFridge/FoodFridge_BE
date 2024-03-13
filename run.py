@@ -8,7 +8,7 @@ from app.api.v1.routes.resources.ingredient_resource import IngredientResource ,
 from app.api.v1.routes.resources.favorite_resource import AddFavoriteResource, FavoriteResourceByUser
 from app.api.v1.routes.resources.recipe_resource import GenerateRecipeFromIngredients
 from app.api.v1.routes.resources.link_recipe_resource import LinkRecipeResource
-from app.api.v1.routes.resources.pantry_resource import PantryResourceByUser, AddPantryResource, EditPantryResource, DeletePantryResource
+from app.api.v1.routes.resources.pantry_resource import PantryResourceByUser, AddPantryResource, EditPantryResource, DeletePantryResource, SearchIngredientResource
 
 from app.api.v1.routes.resources.users import Login_with_email_and_password, Logout, Sign_up_with_email_and_password,LoginWithGoogle,SignUpWithGoogle, Update_Name, Update_Password
 
@@ -54,6 +54,10 @@ api.add_resource(AuthWithAppResource, '/api/v1/AuthWithApp') # refresh token
 api.add_resource(SignupWithEmailAndPasswordResource, '/api/v1/SignupWithEmailAndPassword') # refresh token
 api.add_resource(UpdateProfileResource, '/api/v1/UpdateProfile')
 api.add_resource(UpdatePasswordResource, '/api/v1/UpdatePassword')
+
+# add searchPantry
+api.add_resource(SearchIngredientResource, '/api/v1/SearchIngredient')
+
 
 
 
