@@ -49,10 +49,10 @@ jobs:
         shell: bash
         run: |
           firebase_secret=${{ secrets.FIREBASE }}
+          ENV_VAR=${{ secrets.ENV_VAR }}
           echo $firebase_secret | jq . > firebase_credentials.json
-          echo "${{ secrets.ENV_VAR }}" > .env
-          cat firebase_credentials.json
+          echo $ENV_VAR > .env
 
-      # - name: Deploy
-      #   working-directory: ./
-      #   run: make all-aws
+      - name: Deploy
+        working-directory: ./
+        run: make all-aws
