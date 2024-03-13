@@ -45,9 +45,11 @@ jobs:
           cli_config_credentials_token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Create JSON File from Secret
+        working-directory: ./
         shell: bash
         run: |
           echo '${{ secrets.FIREBASE }}' > firebase_credentials.json
+          ls -la
 
       - name: Create .env File from Secret
         shell: bash
