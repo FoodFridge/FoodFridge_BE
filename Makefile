@@ -14,7 +14,7 @@ S3_BUCKET = foodfridge-20240127052946263200000001
 install:
 	$(PYTHON) -m pip install -r requirements.txt
 
-build: clean
+build:
 	# Create a temporary 'build' directory for dependencies
 	mkdir build
 
@@ -54,4 +54,6 @@ clean:
 	rm -f lambda-*.zip
 	rm -rf build
 
-all: install build upload plan deploy
+all-local: install clean build upload plan deploy
+
+all-aws: install build upload plan deploy

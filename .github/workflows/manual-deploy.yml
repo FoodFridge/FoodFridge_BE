@@ -55,6 +55,5 @@ jobs:
           echo "${{ secrets.ENV_VAR }}" > .env
 
       - name: Deploy
-        shell: bash
-        run: |
-          make all
+        working-directory: ./
+        run: make all-aws
