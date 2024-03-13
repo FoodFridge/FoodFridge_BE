@@ -48,7 +48,7 @@ jobs:
         working-directory: ./
         shell: bash
         run: |
-          echo "${{ secrets.FIREBASE }}" | jq . > firebase_credentials.json
+          echo "${{ secrets.FIREBASE }}" | jq -R . > firebase_credentials.json
           echo "${{ secrets.ENV_VAR }}" > .env
           ls -la
           cat firebase_credentials.json
