@@ -44,14 +44,16 @@ jobs:
           terraform_version: 1.7.3
           cli_config_credentials_token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Create JSON File from Secret
+      - name: Create File from Secret
         working-directory: ./
         shell: bash
         run: |
-          firebase_secret=${{ secrets.FIREBASE }}
           ENV_VAR=${{ secrets.ENV_VAR }}
-          echo $firebase_secret | jq . > firebase_credentials.json
           echo $ENV_VAR > .env
+
+      - name: Download firebase.json from S3
+        working-directory: ./
+        run: aws s3 cp s3://foodfridge-firebase/firebase_credentials.json .
 
       - name: Deploy
         working-directory: ./
