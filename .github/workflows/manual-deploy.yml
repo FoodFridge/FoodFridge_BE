@@ -48,8 +48,10 @@ jobs:
         working-directory: ./
         shell: bash
         run: |
-          echo "${{ secrets.FIREBASE }}" | jq -R . > firebase_credentials.json
+          firebase_secret=${{ secrets.FIREBASE }}
+          echo $firebase_secret | jq . > firebase_credentials.json
           echo "${{ secrets.ENV_VAR }}" > .env
+          cat firebase_secret.json
 
       - name: Deploy
         working-directory: ./
