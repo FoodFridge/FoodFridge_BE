@@ -35,14 +35,14 @@ class IngredientResource(Resource):
                 pantries = []
                 for doc in docs2:
                     doc_dict2 = doc.to_dict()
-                    print("doc_dict2", doc_dict2)
+                    # print("doc_dict2", doc_dict2)
                     pantry = {
                         "user_id": doc_dict2.get("user_id"),
                         "doc_id": doc.id,
                         "ingredient_name": doc_dict2.get("pantryName"),
                         "ingredient_type_code": doc_dict2.get("ingredient_type_code"),
                     }
-                    pantries.push(pantry)
+                    pantries.append(pantry)
                     data.append(pantry)
                     
                 if not pantries:
