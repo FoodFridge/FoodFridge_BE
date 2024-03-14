@@ -26,6 +26,7 @@ build:
 	cp ./$(MAIN_SCRIPT) ./build
 	cp ./$(ENV_FILE) ./build
 	cp ./$(FIREBASE_CRED) ./build
+	cp ./ingredients.json ./build
 	cp -r ./$(APP_DIR) ./build
 
 	# Generate ZIP file name with timestamp
