@@ -114,9 +114,24 @@ class AddPantryResource(Resource):
             data = request.get_json()
 
             pantryName = data.get('pantryName')
+            collection_ref = db.collection('pantry').where("pantryName", "==", pantryName).stream()
+            
+
+            # collection_ref = db.collection('users')
+            # docs = collection_ref.where("email", "==", email).stream()
+            
+            if any(collection_ref):
+
+                response = {
+                    "status": "1",
+                    "message": "Pantry has already!",
+                }
+                  
+                return response, 409 
+
+            
             collection_ref = db.collection('pantry')
             document_id = collection_ref.document().id
-
             pantry= {
                 'date': datetime.now(),
                 'pantryName': pantryName,
