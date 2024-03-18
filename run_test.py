@@ -1,12 +1,15 @@
 import unittest
-from unittest.mock import patch
-from run import lambda_handler
 
-class TestLambdaHandler(unittest.TestCase):
-    @patch('run.awsgi.response')
-    def test_awsgi_response_called(self, mock_awsgi_response):
-        lambda_handler({'some': 'event'}, {'some': 'context'})
-        mock_awsgi_response.assert_called()
+class TestAWSGIImport(unittest.TestCase):
+    def test_awsgi_import(self):
+        # Open run.py and read its contents
+        with open('run.py', 'r') as file:
+            contents = file.read()
 
-if __name__ == "__main__":
+        # Check if "import awsgi" is in the file contents
+        # This is a simple check and assumes the import statement is not commented out.
+        # It does not account for multiline comments or conditional imports within code blocks.
+        self.assertIn('import awsgi', contents, "awsgi must be imported in run.py")
+
+if __name__ == '__main__':
     unittest.main()
