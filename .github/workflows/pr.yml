@@ -1,4 +1,4 @@
-name: Python application test
+name: run.py unit test
 
 on:
   pull_request:
