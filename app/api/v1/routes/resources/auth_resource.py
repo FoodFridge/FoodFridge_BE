@@ -440,13 +440,15 @@ class SignupWithEmailAndPasswordResource(Resource):
                     "status": "1",
                     "message": "Data retrieved successfully",
                 }   
+                
+                return response , 200
             else:
                 response = {
                     "status": "0",
-                    "message": "Data already exists",
+                    "message": "Email already exists!",
                 }   
-            
-            return response , 200
+                                  
+                return response, 409 
         
         except Exception as e:
             # Handle signup errors
