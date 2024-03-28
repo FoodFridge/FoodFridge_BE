@@ -8,11 +8,6 @@ from dotenv import load_dotenv
 import os
 import uuid
 
-
-def generate_random_id():
-    random_id = str(uuid.uuid4())
-    return random_id
-
 class LinkRecipeResource2(Resource):
     def post(self):
         try:
@@ -21,7 +16,7 @@ class LinkRecipeResource2(Resource):
 
             localId = data.get('localId')
             recipe_name = data.get('recipeName')
-        
+
             # Load environment variables from .env file
             load_dotenv()
 
@@ -31,9 +26,9 @@ class LinkRecipeResource2(Resource):
             # Check if API key is available
             if not api_key:
                 raise Exception("API key not found in the environment variables.")
-            
+
             # Construct the URL using the API key
-            url = f"https://www.googleapis.com/customsearch/v1?key={api_key}&cx=e21c2f9ab0e304589&q={recipe_name}"
+            url = f"https://www.googleapis.com/customsearch/v1?key={api_key}&cx=e21c2f9ab0e304589&q={recipe_name}+menu&num=15"
             payload = {}
             headers = {}
 
@@ -55,7 +50,7 @@ class LinkRecipeResource2(Resource):
 
                  # Check if the 'items' field exists in the response
                 if 'items' in response_json:
-                    
+
                     for item in response_json['items']:
                         # Access and print relevant information
                         title = item.get('title', '')
@@ -78,10 +73,8 @@ class LinkRecipeResource2(Resource):
                                     img = thumbnail.get('src', '')
                                     if img.startswith('https://') and img:
 
-                                        favIdRandom = generate_random_id()
-
                                         favorite = {
-                                            "favId": favIdRandom,
+                                            "favId": str(uuid.uuid4()),
                                             'img': img,
                                             "title": recipe_name,
                                             'url': link,
@@ -100,25 +93,25 @@ class LinkRecipeResource2(Resource):
                             if code != "":
                                 message = messageWithStatusCode(code)
                                 return {'message': message},code
-                
+
                             collection_ref = db.collection('favorite')
                             # docs = collection_ref.stream()
 
                             # Construct the query
                             query = collection_ref.where('recipe_name', '==', recipe_name).where('user_id', '==', localId)
                             docs = query.stream()
-                            
+
                             dataFav = []
                             for doc in docs:
                                 doc_data = doc.to_dict()
-                                
+
                                 dataFav.append(doc_data)
 
                             # Check if the title is not present in dataFav
                             if all(doc.get('title', '') != title for doc in dataFav):
                                 link = item.get('link', '')
                                 print(link)
-                            
+
                                 # Check if the link is an HTTP link before inserting
                                 if link.startswith('https://'):
                                     # Access the 'pagemap' dictionary within the item
@@ -197,7 +190,7 @@ class LinkRecipeResource2(Resource):
                                 "message": "Data retrieved successfully",
                                 "data": transformed_data
                             }
-                            
+
                     else:
                         # If no data is present, return a response with a message
                         response = {
@@ -206,7 +199,7 @@ class LinkRecipeResource2(Resource):
                             "data": []
                         }
                     return response, 200
-                        
+
 
                 else:
                     if links:
@@ -219,12 +212,11 @@ class LinkRecipeResource2(Resource):
                     return response, 200
 
             else:
-                
+
                 print(f"Error: {status_code}")
                 return status_code
-     
+
         except Exception as e:
             # Handle the exception and return an appropriate response
             error_message = f"An error occurred: {str(e)}"
             return {"error": error_message}, 500
-
