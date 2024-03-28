@@ -71,7 +71,7 @@ class LinkRecipeResource2(Resource):
                                 for thumbnail in cse_image:
                                     # Access the 'src' value within the thumbnail
                                     img = thumbnail.get('src', '')
-                                    if img.startswith('https://'):
+                                    if img.startswith('https://') and img:
 
                                         favorite = {
                                             "favId": 'None',
@@ -127,7 +127,7 @@ class LinkRecipeResource2(Resource):
                                     for thumbnail in cse_image:
                                         # Access the 'src' value within the thumbnail
                                         img = thumbnail.get('src', '')
-                                        if img.startswith('https://'):
+                                        if img.startswith('https://') and img:
 
                                             favorite = {
                                                 "status": 'N',
