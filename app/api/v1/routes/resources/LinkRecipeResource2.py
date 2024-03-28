@@ -28,7 +28,7 @@ class LinkRecipeResource2(Resource):
                 raise Exception("API key not found in the environment variables.")
             
             # Construct the URL using the API key
-            url = f"https://www.googleapis.com/customsearch/v1?key={api_key}&cx=e21c2f9ab0e304589&q={recipe_name}"
+            url = f"https://www.googleapis.com/customsearch/v1?key={api_key}&cx=e21c2f9ab0e304589&q={recipe_name}+menu&num=15"
             payload = {}
             headers = {}
 
