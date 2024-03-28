@@ -8,11 +8,6 @@ from dotenv import load_dotenv
 import os
 import uuid
 
-
-def generate_random_id():
-    random_id = str(uuid.uuid4())
-    return random_id
-
 class LinkRecipeResource2(Resource):
     def post(self):
         try:
@@ -78,10 +73,8 @@ class LinkRecipeResource2(Resource):
                                     img = thumbnail.get('src', '')
                                     if img.startswith('https://') and img:
 
-                                        favIdRandom = generate_random_id()
-
                                         favorite = {
-                                            "favId": favIdRandom,
+                                            "favId": str(uuid.uuid4()),
                                             'img': img,
                                             "title": recipe_name,
                                             'url': link,
