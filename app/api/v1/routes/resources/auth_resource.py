@@ -136,65 +136,85 @@ class LoginWithEmailAndPasswordResource(Resource):
             load_dotenv()
             api_key = os.getenv("api_key")
             
-            endpoint = f"https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key={api_key}"
-            # Assuming you're using JSON data for login credentials
-            data = request.get_json()
-            # Extract email and password from the request data
-            email = data.get('email')
-            password = data.get('password')
-
-            data = {
-                "email": email,
-                "password": password,
-                "returnSecureToken": True
-            }
-            res = requests.post(endpoint, json=data)
-
-            status_code = res.status_code
-            print(res.text)
-
-
-            if status_code == 200:
-                res = res.json()
-
-                localId = res['localId'] # localId = uid (uid ใช้ ref data ทั้งหมดเช่น favorite)
-                db = firestore.client()
-                collection_ref = db.collection('users')
-                docs = collection_ref.where("localId", "==", localId).stream()
-
-                print(docs)
-
-                token = generate_jwt_token(localId)
-                # token = arr[0]
-                # exp = arr[1]
-                refresh_token = generate_refresh_token(localId)
-
-
-                # JWT Secret Key (Should be kept secret)
-                JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY")
-                payload = jwt.decode(token, JWT_SECRET_KEY, algorithms=["HS256"])
-        
-
-                data = {
-                    "localId": localId,
-                    "token": token,
-                    "refreshToken": refresh_token,
-                    "expTime": payload['exp']
-                }
-
-                response = {
-                    "status": "1",
-                    "message": "Login successful",
-                    "data": data
-                }
-            else:
+            
+            db = firestore.client()
+            collection_ref = db.collection('users')
+            docs = collection_ref.where("email", "==", email).stream()
+            
+            if not any(docs):
                 response = {
                     "status": "0",
-                    "message": "Invalid Email or Password!",
+                    "message": "Email not found. Please check your email address and try again!",
                     "data": []
                 }
 
-            return response , 200
+                return response , 404
+                
+            else:
+         
+                endpoint = f"https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key={api_key}"
+                # Assuming you're using JSON data for login credentials
+                data = request.get_json()
+                # Extract email and password from the request data
+                email = data.get('email')
+                password = data.get('password')
+
+                data = {
+                    "email": email,
+                    "password": password,
+                    "returnSecureToken": True
+                }
+                res = requests.post(endpoint, json=data)
+
+                status_code = res.status_code
+                print(res.text)
+
+
+                if status_code == 200:
+                    res = res.json()
+
+                    localId = res['localId'] # localId = uid (uid ใช้ ref data ทั้งหมดเช่น favorite)
+                    # db = firestore.client()
+                    # collection_ref = db.collection('users')
+                    # docs = collection_ref.where("localId", "==", localId).stream()
+
+                    # print(docs)
+
+                    token = generate_jwt_token(localId)
+                    # token = arr[0]
+                    # exp = arr[1]
+                    refresh_token = generate_refresh_token(localId)
+
+
+                    # JWT Secret Key (Should be kept secret)
+                    JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY")
+                    payload = jwt.decode(token, JWT_SECRET_KEY, algorithms=["HS256"])
+            
+
+                    data = {
+                        "localId": localId,
+                        "token": token,
+                        "refreshToken": refresh_token,
+                        "expTime": payload['exp']
+                    }
+
+                    response = {
+                        "status": "1",
+                        "message": "Login successful",
+                        "data": data
+                    }
+                    
+                    return response , 200
+                else:
+                    response = {
+                    "status": "0",
+                    "message": "Incorrect password. Please verify your password and try again!",
+                    "data": []
+                    }
+
+                    return response , 401
+
+               
         except Exception as e:
             # Handle signup errors
             print("Failed to sign up:", e)
@@ -325,12 +345,11 @@ class AuthWithAppResource(Resource):
                 "data": data
                 }
             else:
-                # Extract user data
+                # กรณียังไม่มี localId ให้ insert ลง users
                 user_data = {
                     'localId': localId,
                     'email': email_,
                     'name': email_,
-                    # Add other user data as needed
                 }
 
                 # Add user data to Firebase Firestore
@@ -339,11 +358,15 @@ class AuthWithAppResource(Resource):
 
                 token = generate_jwt_token(localId)
                 refresh_token = generate_refresh_token(localId)
+                
+                JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY")
+                payload = jwt.decode(token, JWT_SECRET_KEY, algorithms=["HS256"])
              
                 data = {
                     "localId": localId,
                     "token": token,
-                    "refreshToken": refresh_token
+                    "refreshToken": refresh_token,
+                    "expTime": payload['exp']
                 }
 
                 print("data",data)
@@ -417,13 +440,15 @@ class SignupWithEmailAndPasswordResource(Resource):
                     "status": "1",
                     "message": "Data retrieved successfully",
                 }   
+                
+                return response , 200
             else:
                 response = {
                     "status": "0",
-                    "message": "Data already exists",
+                    "message": "Email already exists!",
                 }   
-            
-            return response , 200
+                                  
+                return response, 409 
         
         except Exception as e:
             # Handle signup errors
