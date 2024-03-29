@@ -28,7 +28,7 @@ class LinkRecipeResource2(Resource):
                 raise Exception("API key not found in the environment variables.")
 
             # Construct the URL using the API key
-            url = f"https://www.googleapis.com/customsearch/v1?key={api_key}&cx=e21c2f9ab0e304589&q={recipe_name}"
+            url = f"https://www.googleapis.com/customsearch/v1?key={api_key}&cx=e21c2f9ab0e304589&q={recipe_name}+menu&num=15"
             payload = {}
             headers = {}
 
@@ -57,34 +57,33 @@ class LinkRecipeResource2(Resource):
                         link = item.get('link', '')
 
                         if not localId:
+                            if link.startswith('https://'):
+                                # Access the 'pagemap' dictionary within the item
+                                pagemap = item.get('pagemap', {})
 
-                                if link.startswith('https://'):
-                                    # Access the 'pagemap' dictionary within the item
-                                    pagemap = item.get('pagemap', {})
+                                # Access the 'thumbnail' list within the pagemap
+                                cse_image = pagemap.get('cse_image', [])
 
-                                    # Access the 'thumbnail' list within the pagemap
-                                    cse_image = pagemap.get('cse_image', [])
+                                # Initialize img variable
+                                img = ''
 
-                                    # Initialize img variable
-                                    img = ''
+                                # Iterate through each thumbnail in the list
+                                for thumbnail in cse_image:
+                                    # Access the 'src' value within the thumbnail
+                                    img = thumbnail.get('src', '')
+                                    if img.startswith('https://') and img:
 
-                                    # Iterate through each thumbnail in the list
-                                    for thumbnail in cse_image:
-                                        # Access the 'src' value within the thumbnail
-                                        img = thumbnail.get('src', '')
-                                        if img.startswith('https://') and img:
-
-                                            favorite = {
-                                                "favId": str(uuid.uuid4()),
-                                                'img': img,
-                                                "title": recipe_name,
-                                                'url': link,
-                                                'title': title,
-                                                "isFavorite": 'None',
-                                                "userId": 'None'
-                                                # Add more fields as needed
-                                            }
-                                            links.append(favorite)
+                                        favorite = {
+                                            "favId": str(uuid.uuid4()),
+                                            'img': img,
+                                            "title": recipe_name,
+                                            'url': link,
+                                            'title': title,
+                                            "isFavorite": 'None',
+                                            "userId": 'None'
+                                            # Add more fields as needed
+                                        }
+                                    links.append(favorite)
 
                         else:
                             user_timezone = request.headers.get('User-Timezone')
@@ -94,8 +93,6 @@ class LinkRecipeResource2(Resource):
                             if code != "":
                                 message = messageWithStatusCode(code)
                                 return {'message': message},code
-                            
-                            
 
                             collection_ref = db.collection('favorite')
                             # docs = collection_ref.stream()
@@ -113,7 +110,7 @@ class LinkRecipeResource2(Resource):
                             # Check if the title is not present in dataFav
                             if all(doc.get('title', '') != title for doc in dataFav):
                                 link = item.get('link', '')
-                                
+                                print(link)
 
                                 # Check if the link is an HTTP link before inserting
                                 if link.startswith('https://'):
@@ -150,34 +147,29 @@ class LinkRecipeResource2(Resource):
 
                                         # Set data for the document in the batch
                                         batch.set(document_ref, favorite)
-                        
+
                         # Commit the batch
                         batch.commit()
-                        
 
                 # response = {}
                 if localId:
+
                     collection_ref = db.collection('favorite')
 
                     # Construct the query using filter keyword argument
                     query = collection_ref.where('recipe_name', '==', recipe_name).where('user_id', '==', localId)
-                    
 
                     # Alternatively, you can use filter keyword argument directly
                     # query = collection_ref.where(recipe_name='recipe_name', user_id='localId')
 
                     docs = query.stream()
-                   
-                    
                     dataResult = []
-                    print('dataResult ',dataResult )
 
                     for doc in docs:
                         doc_data = doc.to_dict()
                         doc_id = doc.id  # Get the document_id
                         # Append the document_id along with the data to the 'data' list
                         dataResult.append({"document_id": doc_id, "data": doc_data})
-                        
 
                     if dataResult:
                         transformed_data = []
@@ -228,5 +220,3 @@ class LinkRecipeResource2(Resource):
             # Handle the exception and return an appropriate response
             error_message = f"An error occurred: {str(e)}"
             return {"error": error_message}, 500
-
-
