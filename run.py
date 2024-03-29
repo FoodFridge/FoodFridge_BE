@@ -18,7 +18,7 @@ from app.api.v1.routes.resources.LinkRecipeResource2 import LinkRecipeResource2
 
 #Important: สำคัญมาก please don't forget to uncomment 'import awsgi' before push into GitHub.
 #ก่อน พุชโค้ด อย่าลืม อันคอมเม้นท์ด้วยนะคะ [^;^]. Otherwise, App will break. Cannot run back-end code in server.
-# import awsgi
+import awsgi
 
 app = Flask(__name__)
 api = Api(app)
