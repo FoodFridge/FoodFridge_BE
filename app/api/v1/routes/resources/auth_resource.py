@@ -8,6 +8,9 @@ import os
 import jwt
 from datetime import datetime, timedelta
 import pytz
+import smtplib
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
 
 load_dotenv()
 # JWT Secret Key (Should be kept secret)
@@ -124,26 +127,71 @@ def generate_jwt_token(localId):
 def generate_refresh_token(localId):
     return jwt.encode({'localId': localId}, JWT_SECRET_KEY, algorithm='HS256')
 
+def send_email_with_link(sender_email, sender_password, recipient_email, link):
+    try:
+        # Set up the SMTP server
+        smtp_server = smtplib.SMTP_SSL('smtp.gmail.com', 465)
+        smtp_server.login(sender_email, sender_password)
 
+        # Create message container
+        msg = MIMEMultipart()
+        msg['From'] = "FoodFridge"
+        msg['To'] = recipient_email
+        msg['Subject'] = 'Reset FoodFridge Account Password'
+
+        # Create the body of the message (a simple text with the link)
+        body = f'To FoodFridge User,\n\nPlease click this link to reset the password: {link}\n\nBest regards,\nFoodFridge Team'
+        msg.attach(MIMEText(body, 'plain'))
+
+        # Send the email
+        smtp_server.send_message(msg)
+
+        # Close the connection
+        smtp_server.quit()
+        print("Email sent successfully.")
+    except Exception as e:
+        print("Failed to send email:", e)
 
 class resetPassword(Resource):
     def post(self):
         
         try:
-           
-            auth_data = auth_parser.parse_args()
-            email = auth_data['email']
-            password = auth_data['password']
+            data = request.get_json()
+            email = data['email']
 
-            load_dotenv()
-            api_key = os.getenv("api_key")
+            #check email if there is exist in database
+            db = firestore.client()
+            collection_ref = db.collection('users')
+            query = collection_ref.where('email', '==', email)
+            docs = query.stream()
 
+            # Check if any documents are returned
+            email_exists = any(docs)
+
+            if not email_exists:
+                print("Email does not exist in the database. You can proceed to insert the document.")
+                response = {
+                    "status": "0",
+                    "message": "Email not found in the database.",
+                }      
+                                  
+                return response, 404
+            
+            #need to change the sender email to foodfridge email
             link = auth.generate_password_reset_link(email)
-            return {"link": link}, 200
+
+            send_email_with_link('peawseaw@gmail.com', 'dkwu cjnb cpil yozh', email, link)
+
+            response = {
+                "status": "1",
+                "message": "Password reset link sent to the email.",
+                }  
+            return response, 200
+        
         except Exception as e:
-            # Handle signup errors
-            print("Failed to sign up:", e)
-            return {"message": f"Signup failed: {str(e)}"}, 500
+            # Handle errors
+            print("Failed to reset password:", e)
+            return {"message": f"Failed to reset password: {str(e)}"}, 500
 
 
 
