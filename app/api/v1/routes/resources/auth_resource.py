@@ -124,6 +124,29 @@ def generate_jwt_token(localId):
 def generate_refresh_token(localId):
     return jwt.encode({'localId': localId}, JWT_SECRET_KEY, algorithm='HS256')
 
+
+
+class resetPassword(Resource):
+    def post(self):
+        
+        try:
+           
+            auth_data = auth_parser.parse_args()
+            email = auth_data['email']
+            password = auth_data['password']
+
+            load_dotenv()
+            api_key = os.getenv("api_key")
+
+            link = auth.generate_password_reset_link(email)
+            return {"link": link}, 200
+        except Exception as e:
+            # Handle signup errors
+            print("Failed to sign up:", e)
+            return {"message": f"Signup failed: {str(e)}"}, 500
+
+
+
 # auth email , password
 class LoginWithEmailAndPasswordResource(Resource):
     def post(self):

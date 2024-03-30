@@ -6,13 +6,13 @@ from app.core.firebase import initialize_firebase_app
 from app.api.v1.routes.resources.alpha_resource import AlphaResource
 from app.api.v1.routes.resources.ingredient_resource import IngredientResource ,IngredientResourceWithCategory, AddIngredients
 from app.api.v1.routes.resources.favorite_resource import AddFavoriteResource, FavoriteResourceByUser
-from app.api.v1.routes.resources.recipe_resource import GenerateRecipeFromIngredients
+from app.api.v1.routes.resources.recipe_resource import GenerateRecipeFromIngredients,GenerateRecipeFromIngredientsWithGoogle
 from app.api.v1.routes.resources.link_recipe_resource import LinkRecipeResource
 from app.api.v1.routes.resources.pantry_resource import PantryResourceByUser, AddPantryResource, EditPantryResource, DeletePantryResource, SearchIngredientResource
 
 from app.api.v1.routes.resources.users import Login_with_email_and_password, Logout, Sign_up_with_email_and_password,LoginWithGoogle,SignUpWithGoogle, Update_Name, Update_Password
 
-from app.api.v1.routes.resources.auth_resource import LoginWithEmailAndPasswordResource,LogoutResource,RefreshTokenResource,AuthWithAppResource,SignupWithEmailAndPasswordResource,UpdateProfileResource,UpdatePasswordResource
+from app.api.v1.routes.resources.auth_resource import LoginWithEmailAndPasswordResource,LogoutResource,RefreshTokenResource,AuthWithAppResource,SignupWithEmailAndPasswordResource,UpdateProfileResource,UpdatePasswordResource,resetPassword
 
 from app.api.v1.routes.resources.LinkRecipeResource2 import LinkRecipeResource2
 
@@ -34,6 +34,7 @@ api.add_resource(IngredientResourceWithCategory, '/api/v1/ingredient/<string:cat
 api.add_resource(AddFavoriteResource, '/api/v1/favorite')
 api.add_resource(FavoriteResourceByUser, '/api/v1/favorite/<string:localId>/<string:is_favorite>')
 api.add_resource(GenerateRecipeFromIngredients, '/api/v1/GenerateRecipe')
+api.add_resource(GenerateRecipeFromIngredientsWithGoogle, '/api/v1/GenerateRecipeWithGoogle')
 api.add_resource(AddIngredients, '/api/v1/addIngredients')
 api.add_resource(LinkRecipeResource, '/api/v1/LinkRecipe')
 api.add_resource(PantryResourceByUser, '/api/v1/pantry/<string:localId>')
@@ -61,7 +62,7 @@ api.add_resource(UpdatePasswordResource, '/api/v1/UpdatePassword')
 # add searchPantry
 api.add_resource(SearchIngredientResource, '/api/v1/SearchIngredient')
 
-
+api.add_resource(resetPassword, '/api/v1/resetPassword')
 
 
 # AWS Lambda handler
