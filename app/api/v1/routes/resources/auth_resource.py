@@ -25,6 +25,8 @@ auth_parser.add_argument('password', required=True, help='Password is required')
 refresh_token_parser = reqparse.RequestParser()
 refresh_token_parser.add_argument('refresh_token', required=True, help='Refresh token is required')
 
+# ตัวแปรข้อมูลแบบ dictionary เก็บ token blacklist
+blacklisted_tokens = {}
 
 def messageWithStatusCode(choice):
     def set_message_case1():
@@ -62,7 +64,8 @@ def authorization(localId,user_timezone):
 
 
         # Check if any documents are returned
-        data_blacklist = any(docs)
+        # data_blacklist = any(docs)
+        data_blacklist = is_token_blacklisted(localId,jwt_token)
         print("data_blacklist",data_blacklist)
         if data_blacklist:
             statusCode = 500
@@ -127,6 +130,25 @@ def generate_jwt_token(localId):
 def generate_refresh_token(localId):
     return jwt.encode({'localId': localId}, JWT_SECRET_KEY, algorithm='HS256')
 
+# เพิ่ม token ลงใน blacklist พร้อมระบุผู้ใช้
+def blacklist_token(user_id, token):
+    if user_id in blacklisted_tokens:
+        blacklisted_tokens[user_id].add(token)
+    else:
+        blacklisted_tokens[user_id] = {token}
+
+# ตรวจสอบว่า token ของผู้ใช้ถูกบล็อกหรือไม่
+def is_token_blacklisted(user_id, token):
+    return user_id in blacklisted_tokens and token in blacklisted_tokens[user_id]
+
+# เมื่อผู้ใช้เข้าสู่ระบบใหม่ ให้เคลียร์ token blacklist ของผู้ใช้
+def clear_user_blacklist(user_id):
+    if user_id in blacklisted_tokens:
+        del blacklisted_tokens[user_id]
+
+
+
+# send mail กรณี reset password
 def send_email_with_link(sender_email, sender_password, recipient_email, link):
     try:
         # Set up the SMTP server
@@ -152,7 +174,7 @@ def send_email_with_link(sender_email, sender_password, recipient_email, link):
     except Exception as e:
         print("Failed to send email:", e)
 
-class resetPassword(Resource):
+class ResetPasswordResource(Resource):
     def post(self):
         
         try:
@@ -177,10 +199,15 @@ class resetPassword(Resource):
                                   
                 return response, 404
             
+        
+            
             #need to change the sender email to foodfridge email
             link = auth.generate_password_reset_link(email)
 
-            send_email_with_link('peawseaw@gmail.com', 'dkwu cjnb cpil yozh', email, link)
+            # send_email_with_link('peawseaw@gmail.com', 'dkwu cjnb cpil yozh', email, link)
+
+            send_email_with_link('foodfridge.contact@gmail.com', 'coyy xkgu gntn nezb', email, link)
+
 
             response = {
                 "status": "1",
@@ -261,6 +288,7 @@ class LoginWithEmailAndPasswordResource(Resource):
                     JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY")
                     payload = jwt.decode(token, JWT_SECRET_KEY, algorithms=["HS256"])
             
+                    clear_user_blacklist(localId)
 
                     data = {
                         "localId": localId,
@@ -305,45 +333,53 @@ class LogoutResource(Resource):
             if localId == "": # check localId empty
                 return {'message': 'Logout successful'}, 200
             
-            db = firestore.client() # init db firebase
+            
+            
+            blacklist_token(localId,token)
+            
+            if localId:
+                return {'message': 'Logout successful'}, 200
+            else:
+                return {'error': 'Authorization header missing'}, 400
+            
+            
+            
+            # db = firestore.client() # init db firebase
 
-            collection_ref = db.collection('token_blacklist')
-            query = collection_ref.where('localId', '==', localId).where('token', '==', token)
-            docs = query.stream()
+            # collection_ref = db.collection('token_blacklist')
+            # query = collection_ref.where('localId', '==', localId).where('token', '==', token)
+            # docs = query.stream()
 
-            # Check if any documents are returned
-            data_exist = any(docs)
-            print("data_exist",data_exist)
+            # # Check if any documents are returned
+            # data_exist = any(docs)
+            # print("data_exist",data_exist)
 
-            if not data_exist:
-                set_data = {
-                    "localId": localId,
-                    'token': token,                        
-                }
+            # if not data_exist:
+            #     set_data = {
+            #         "localId": localId,
+            #         'token': token,                        
+            #     }
 
             
-                # Create a batch object
-                batch = db.batch()
+            #     # Create a batch object
+            #     batch = db.batch()
                 
-                # Reference to the 'favorite' collection
-                collection_ref = db.collection('token_blacklist')
+            #     # Reference to the 'favorite' collection
+            #     collection_ref = db.collection('token_blacklist')
 
-                # Create a new document reference in the batch
-                document_ref = collection_ref.document()
+            #     # Create a new document reference in the batch
+            #     document_ref = collection_ref.document()
 
-                # Set data for the document in the batch
-                batch.set(document_ref, set_data)
-                # Commit the batch
-                batch.commit()
+            #     # Set data for the document in the batch
+            #     batch.set(document_ref, set_data)
+            #     # Commit the batch
+            #     batch.commit()
         
         except Exception as e:
                 return {'error': str(e)}, 400
 
 
-        if localId:
-            return {'message': 'Logout successful'}, 200
-        else:
-            return {'error': 'Authorization header missing'}, 400
+     
     
 class RefreshTokenResource(Resource):
     def post(self):
@@ -391,10 +427,9 @@ class AuthWithAppResource(Resource):
             collection_ref = db.collection('users')
             # check data users from uid
             docs = collection_ref.where("localId", "==", localId).stream()
-
+            
             # check data in docs
             if any(docs):
-
                 token = generate_jwt_token(localId)
                 refresh_token = generate_refresh_token(localId)
 
@@ -402,6 +437,7 @@ class AuthWithAppResource(Resource):
                 JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY")
                 payload = jwt.decode(token, JWT_SECRET_KEY, algorithms=["HS256"])
                 
+                # clear_user_blacklist(localId)
 
                 data = {
                     "localId": localId,
@@ -440,7 +476,7 @@ class AuthWithAppResource(Resource):
                     "expTime": payload['exp']
                 }
 
-                print("data",data)
+                # print("data",data)
 
                 response = {
                 "status": "1",
