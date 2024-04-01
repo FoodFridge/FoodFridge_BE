@@ -63,7 +63,7 @@ class LinkRecipeResource(Resource):
                 # Create a batch object
                 batch = db.batch()
 
-                 # Check if the 'items' field exists in the response
+                # Check if the 'items' field exists in the response
                 if 'items' in response_json:
 
                     for item in response_json['items']:

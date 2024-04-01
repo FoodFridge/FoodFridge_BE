@@ -24,6 +24,7 @@ class IngredientResource(Resource):
                 print("code",code)
                 if code != "":
                     message = messageWithStatusCode(code)
+                    print(message)
                     return {'message': message},code
                 
                 collection_ref2 = db.collection('pantry')
