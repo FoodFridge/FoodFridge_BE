@@ -102,7 +102,7 @@ class AddPantryResource(Resource):
             data = request.get_json()
 
             pantryName = data.get('pantryName')
-            collection_ref = db.collection('pantry').where("pantryName", "==", pantryName).stream()
+            collection_ref = db.collection('pantry').where("pantryName", "==", pantryName).where("user_id", "==", localId).stream()
             
 
             # collection_ref = db.collection('users')
