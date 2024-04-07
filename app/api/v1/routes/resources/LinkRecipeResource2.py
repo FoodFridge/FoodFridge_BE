@@ -2,11 +2,13 @@ from flask import request, jsonify
 from flask_restful import Resource
 from firebase_admin import auth, initialize_app, credentials
 from app.core.firebase import initialize_firebase_app, firestore
-from app.api.v1.routes.resources.auth_resource import authorization, messageWithStatusCode
+from app.api.v1.routes.resources.auth_resource import authorization, messageWithStatusCode 
+from app.api.v1.routes.resources.recipe_resource import is_image
 import requests
 from dotenv import load_dotenv
 import os
 import uuid
+import traceback
 
 class LinkRecipeResource2(Resource):
     def post(self):
@@ -56,6 +58,7 @@ class LinkRecipeResource2(Resource):
                         title = item.get('title', '')
                         link = item.get('link', '')
 
+                        # กรณีไม่มี localId
                         if not localId:
                             if link.startswith('https://'):
                                 # Access the 'pagemap' dictionary within the item
@@ -71,7 +74,7 @@ class LinkRecipeResource2(Resource):
                                 for thumbnail in cse_image:
                                     # Access the 'src' value within the thumbnail
                                     img = thumbnail.get('src', '')
-                                    if img.startswith('https://') and img:
+                                    if img.startswith('https://') and img and is_image(img):
 
                                         favorite = {
                                             "favId": str(uuid.uuid4()),
@@ -127,7 +130,7 @@ class LinkRecipeResource2(Resource):
                                     for thumbnail in cse_image:
                                         # Access the 'src' value within the thumbnail
                                         img = thumbnail.get('src', '')
-                                        if img.startswith('https://') and img:
+                                        if img.startswith('https://') and img and is_image(img):
 
                                             favorite = {
                                                 "status": 'N',
@@ -139,14 +142,14 @@ class LinkRecipeResource2(Resource):
                                                 # Add more fields as needed
                                             }
 
-                                        # Reference to the 'favorite' collection
-                                        collection_ref = db.collection('favorite')
+                                            # Reference to the 'favorite' collection
+                                            collection_ref = db.collection('favorite')
 
-                                        # Create a new document reference in the batch
-                                        document_ref = collection_ref.document()
+                                            # Create a new document reference in the batch
+                                            document_ref = collection_ref.document()
 
-                                        # Set data for the document in the batch
-                                        batch.set(document_ref, favorite)
+                                            # Set data for the document in the batch
+                                            batch.set(document_ref, favorite)
 
                         # Commit the batch
                         batch.commit()
@@ -216,6 +219,9 @@ class LinkRecipeResource2(Resource):
                 print(f"Error: {status_code}")
                 return status_code
 
+        except NameError:
+                traceback.print_exc(limit=1)  # Print the traceback with limit 1 to only show the line that raised the exception
+                print("Variable 'my_variable' is not defined.")
         except Exception as e:
             # Handle the exception and return an appropriate response
             error_message = f"An error occurred: {str(e)}"
