@@ -70,6 +70,12 @@ class GenerateRecipeFromIngredients(Resource):
             return {"error": error_message}, 500
     
     
+def is_image(filename):
+    # Split the filename into base name and extension
+    _, ext = os.path.splitext(filename)
+    # Check if the extension matches jpg, jpeg, png, or gif
+    return ext.lower() in ('.jpg', '.jpeg', '.png', '.gif')
+
 # เพิ่ม token ลงใน blacklist พร้อมระบุผู้ใช้
 def getRecipeWithGoogle(data,ingredients):
     # Load environment variables from .env file
@@ -112,7 +118,7 @@ def getRecipeWithGoogle(data,ingredients):
     
                     # Access the 'src' value within the thumbnail
                     img = thumbnail.get('src', '')
-                    if img.startswith('https://') and img:
+                    if img.startswith('https://') and img and is_image(img):
                                
                         # Generate a random 6-digit ID
                         random_id = ''.join(random.choices('0123456789', k=6))
@@ -143,7 +149,8 @@ def getRecipeWithGoogle(data,ingredients):
       
       
 def search_menu_items(api_key, ingredients, start_index):
-    url = f"https://www.googleapis.com/customsearch/v1?key={api_key}&cx=e21c2f9ab0e304589&q={ingredients}&start={start_index}"
+    url = f"https://www.googleapis.com/customsearch/v1?key={api_key}&cx=e21c2f9ab0e304589&q={ingredients}+recipe&start={start_index}"
+    response = requests.get(url)
     # print("ur",url)
     payload = {}
     headers = {}
@@ -163,7 +170,11 @@ def retrieve_menu_items(api_key,ingredients, total_results):
             break
         for item in items:
             
-            title = item.get('title','')
+            title_ = item.get('title','').split('|')
+            
+            
+            
+            title = title_[0].strip()
             
             # Access the 'pagemap' dictionary within the item
             pagemap = item.get('pagemap', {})
@@ -176,7 +187,7 @@ def retrieve_menu_items(api_key,ingredients, total_results):
     
                 # Access the 'src' value within the thumbnail
                 img = thumbnail.get('src', '')
-                if img.startswith('https://') and img:
+                if img.startswith('https://') and img and is_image(img):
                                 
                     if item not in menu_items:  # Filter out duplicates
                         # print(item)
@@ -215,6 +226,8 @@ class GenerateRecipeFromIngredientsWithGoogle(Resource):
             # print(ingredients)
             # Load environment variables from .env file
             load_dotenv()
+            
+            
 
             # Access the API key from the environment variable
             api_key = os.getenv("API_KEY_SEARCH")
