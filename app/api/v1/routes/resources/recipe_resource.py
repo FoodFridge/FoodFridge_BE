@@ -170,15 +170,11 @@ def retrieve_menu_items(api_key,ingredients, total_results):
             break
         for item in items:
             
-            # title_ = item.get('title','').split('|')
-            
-            item_title =  item.get('title','')
-            title_parts = item_title.split('|')  # แยกด้วย |
-            title_parts = title_parts[0].split('-') # แยกแต่ละส่วนด้วย - และระบุเพียงส่วนแรกเท่านั้น
-            title_parts = title_parts[0].split(':').strip()  # แยกแต่ละส่วนด้วย : และระบุเพียงส่วนแรกเท่านั้น
+            title_ = item.get('title','').split('|')
             
             
-            # title = title_[0].strip()
+            
+            title = title_[0].strip()
             
             # Access the 'pagemap' dictionary within the item
             pagemap = item.get('pagemap', {})
