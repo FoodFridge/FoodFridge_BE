@@ -11,6 +11,9 @@ import pytz
 import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
+import re
+
+
 
 load_dotenv()
 # JWT Secret Key (Should be kept secret)
@@ -174,6 +177,16 @@ def send_email_with_link(sender_email, sender_password, recipient_email, link):
     except Exception as e:
         print("Failed to send email:", e)
 
+def is_valid_email(email):
+    # Regular expression pattern for validating email format
+    pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+    
+    # Match the pattern with the email address
+    if re.match(pattern, email):
+        return True
+    else:
+        return False
+    
 class ResetPasswordResource(Resource):
     def post(self):
         
@@ -230,7 +243,7 @@ class LoginWithEmailAndPasswordResource(Resource):
             auth_data = auth_parser.parse_args()
             email = auth_data['email']
             password = auth_data['password']
-
+                      
             load_dotenv()
             api_key = os.getenv("api_key")
             
@@ -265,7 +278,7 @@ class LoginWithEmailAndPasswordResource(Resource):
                 res = requests.post(endpoint, json=data)
 
                 status_code = res.status_code
-                print(res.text)
+                # print(res.text)
 
 
                 if status_code == 200:
@@ -452,6 +465,13 @@ class AuthWithAppResource(Resource):
                 "data": data
                 }
             else:
+                
+                if email_ == "":
+                    return {'error': 'Email is required.'}, 400
+                
+                if is_valid_email(email_) == False :
+                    return {'error': 'Email not correct.'}, 400
+                
                 # กรณียังไม่มี localId ให้ insert ลง users
                 user_data = {
                     'localId': localId,
@@ -509,6 +529,22 @@ class SignupWithEmailAndPasswordResource(Resource):
 
         try:
 
+            if email == "":
+                response = {
+                    "status": "0",
+                    "message": "Email is required!",
+                }   
+                                  
+                return response, 400
+            
+            if is_valid_email(email) == False:
+                response = {
+                    "status": "0",
+                    "message": "Email not correct!",
+                }   
+                                  
+                return response, 400 
+            
             collection_ref = db.collection('users')
             query = collection_ref.where('email', '==', email)
             docs = query.stream()
@@ -555,7 +591,7 @@ class SignupWithEmailAndPasswordResource(Resource):
                     "message": "Email already exists!",
                 }   
                                   
-                return response, 409 
+                return response, 400 
         
         except Exception as e:
             # Handle signup errors
