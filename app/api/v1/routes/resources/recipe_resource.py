@@ -56,7 +56,7 @@ class GenerateRecipeFromIngredients(Resource):
                     recipe_data.append(recipe_dict)
 
                 return {"success": True, "recipes": recipe_data}
-            
+
             else:
                 # Handle the error
                 error_message = f"Error: {response.status_code} - {response.text}"
@@ -68,8 +68,8 @@ class GenerateRecipeFromIngredients(Resource):
             error_message = f"An error occurred: {str(e)}"
             logging.error(error_message)
             return {"error": error_message}, 500
-    
-    
+
+
 def is_image(filename):
     # Split the filename into base name and extension
     _, ext = os.path.splitext(filename)
@@ -87,7 +87,7 @@ def getRecipeWithGoogle(data,ingredients):
     # Check if API key is available
     if not api_key:
         raise Exception("API key not found in the environment variables.")
-            
+
     # Construct the URL using the API key
     url = f"https://www.googleapis.com/customsearch/v1?key={api_key}&cx=e21c2f9ab0e304589&q={ingredients}+menu&start=11"
     payload = {}
@@ -106,20 +106,20 @@ def getRecipeWithGoogle(data,ingredients):
             for item in response_json['items']:
                 # Access and print relevant information
                 title = item.get('title', '')
-                        
+
                 # Access the 'pagemap' dictionary within the item
                 pagemap = item.get('pagemap', {})
-                                
+
                 # Access the 'thumbnail' list within the pagemap
                 cse_image = pagemap.get('cse_image', [])
-                                
+
                 # Iterate through each thumbnail in the list
                 for thumbnail in cse_image:
-    
+
                     # Access the 'src' value within the thumbnail
                     img = thumbnail.get('src', '')
                     if img.startswith('https://') and img and is_image(img):
-                               
+
                         # Generate a random 6-digit ID
                         random_id = ''.join(random.choices('0123456789', k=6))
 
@@ -135,7 +135,7 @@ def getRecipeWithGoogle(data,ingredients):
                         # for item1 in data:
                             # title1 = item1.get('title', '')
                             # if title != title1:
-                        count_items = len(data)    
+                        count_items = len(data)
                         if count_items < 10 :
                             recipe_dict = {
                                 'id' : concatenated_id,
@@ -144,10 +144,10 @@ def getRecipeWithGoogle(data,ingredients):
                             }
                             data.append(recipe_dict)
     return data
-                
-      
-      
-      
+
+
+
+
 def search_menu_items(api_key, ingredients, start_index):
     url = f"https://www.googleapis.com/customsearch/v1?key={api_key}&cx=e21c2f9ab0e304589&q={ingredients}+recipe&start={start_index}"
     response = requests.get(url)
@@ -156,7 +156,7 @@ def search_menu_items(api_key, ingredients, start_index):
     headers = {}
 
     response = requests.request("GET", url, headers=headers, data=payload)
-            
+
     data = response.json()
     # print("data",data)
     return data.get('items', [])
@@ -169,26 +169,30 @@ def retrieve_menu_items(api_key,ingredients, total_results):
         if not items:
             break
         for item in items:
-            
-            title_ = item.get('title','').split('|')
-            
-            
-            
-            title = title_[0].strip()
-            
+
+            # title_ = item.get('title','').split('|')
+
+            item_title =  item.get('title','')
+            title_parts = item_title.split('|')  # แยกด้วย |
+            title_parts = title_parts[0].split('-') # แยกแต่ละส่วนด้วย - และระบุเพียงส่วนแรกเท่านั้น
+            title_parts = title_parts[0].split(':').strip()  # แยกแต่ละส่วนด้วย : และระบุเพียงส่วนแรกเท่านั้น
+
+
+            # title = title_[0].strip()
+
             # Access the 'pagemap' dictionary within the item
             pagemap = item.get('pagemap', {})
-                                
+
             # Access the 'thumbnail' list within the pagemap
             cse_image = pagemap.get('cse_image', [])
-                                
+
             # Iterate through each thumbnail in the list
             for thumbnail in cse_image:
-    
+
                 # Access the 'src' value within the thumbnail
                 img = thumbnail.get('src', '')
                 if img.startswith('https://') and img and is_image(img):
-                                
+
                     if item not in menu_items:  # Filter out duplicates
                         # print(item)
                         # Generate a random 6-digit ID
@@ -206,11 +210,11 @@ def retrieve_menu_items(api_key,ingredients, total_results):
                             'title' : title,
                             'img' : img,
                         }
-                                
+
                         menu_items.append(recipe_dict)
                         start_index += len(items)
     return menu_items[:total_results]  # Return up to the specified total_results
-      
+
 class GenerateRecipeFromIngredientsWithGoogle(Resource):
     def post(self):
         try:
@@ -226,8 +230,8 @@ class GenerateRecipeFromIngredientsWithGoogle(Resource):
             # print(ingredients)
             # Load environment variables from .env file
             load_dotenv()
-            
-            
+
+
 
             # Access the API key from the environment variable
             api_key = os.getenv("API_KEY_SEARCH")
@@ -235,7 +239,7 @@ class GenerateRecipeFromIngredientsWithGoogle(Resource):
             # Check if API key is available
             if not api_key:
                 raise Exception("API key not found in the environment variables.")
-            
+
             menu_items = retrieve_menu_items(api_key, ingredients,10 )
             return {"success": True, "recipes": menu_items}
 

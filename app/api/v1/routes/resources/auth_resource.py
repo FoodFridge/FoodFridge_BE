@@ -11,6 +11,9 @@ import pytz
 import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
+import re
+from email_validator import validate_email
+
 
 load_dotenv()
 # JWT Secret Key (Should be kept secret)
@@ -55,7 +58,7 @@ def authorization(localId,user_timezone):
     if authorization_header and authorization_header.startswith('Bearer '):
         jwt_token = authorization_header.split(' ')[1]
         print("jwt_token",jwt_token)
-                    
+
         db = firestore.client() # init db firebase
 
         collection_ref = db.collection('token_blacklist')
@@ -69,20 +72,20 @@ def authorization(localId,user_timezone):
         print("data_blacklist",data_blacklist)
         if data_blacklist:
             statusCode = 500
-           
-        
+
+
         load_dotenv()
         # JWT Secret Key (Should be kept secret)
         JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY")
         # Verify JWT token
         payload = jwt.decode(jwt_token, JWT_SECRET_KEY, algorithms=["HS256"])
-        
+
         print("payload",payload)
         # Check token expiration
         # issue timezone
         # if datetime.utcnow() > datetime.fromtimestamp(payload['exp']):
             # statusCode = 401
-        
+
 
         user_timezone = pytz.timezone(user_timezone)
 
@@ -110,7 +113,7 @@ def generate_jwt_token(localId):
 
     EXPIRE_TOKEN = os.getenv("EXPIRE_TOKEN")
     print("EXPIRE_TOKEN",int(EXPIRE_TOKEN))
-    expiration_time = datetime.utcnow() + timedelta(seconds=int(EXPIRE_TOKEN))  
+    expiration_time = datetime.utcnow() + timedelta(seconds=int(EXPIRE_TOKEN))
 
     # Create payload with username and expiration time
     payload = {
@@ -174,9 +177,26 @@ def send_email_with_link(sender_email, sender_password, recipient_email, link):
     except Exception as e:
         print("Failed to send email:", e)
 
+def is_valid_email(email):
+    # Regular expression pattern for validating email format
+    pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+
+    # Match the pattern with the email address
+    if re.match(pattern, email):
+        return True
+    else:
+        return False
+
+def validate_email_address(email):
+    try:
+        v = validate_email(email)
+        return True
+    except Exception as e:
+        return False
+
 class ResetPasswordResource(Resource):
     def post(self):
-        
+
         try:
             data = request.get_json()
             email = data['email']
@@ -195,12 +215,12 @@ class ResetPasswordResource(Resource):
                 response = {
                     "status": "0",
                     "message": "Email not found in the database.",
-                }      
-                                  
+                }
+
                 return response, 404
-            
-        
-            
+
+
+
             #need to change the sender email to foodfridge email
             link = auth.generate_password_reset_link(email)
 
@@ -212,9 +232,9 @@ class ResetPasswordResource(Resource):
             response = {
                 "status": "1",
                 "message": "Password reset link sent to the email.",
-                }  
+                }
             return response, 200
-        
+
         except Exception as e:
             # Handle errors
             print("Failed to reset password:", e)
@@ -225,7 +245,7 @@ class ResetPasswordResource(Resource):
 # auth email , password
 class LoginWithEmailAndPasswordResource(Resource):
     def post(self):
-        
+
         try:
             auth_data = auth_parser.parse_args()
             email = auth_data['email']
@@ -233,12 +253,12 @@ class LoginWithEmailAndPasswordResource(Resource):
 
             load_dotenv()
             api_key = os.getenv("api_key")
-            
-            
+
+
             db = firestore.client()
             collection_ref = db.collection('users')
             docs = collection_ref.where("email", "==", email).stream()
-            
+
             if not any(docs):
                 response = {
                     "status": "0",
@@ -247,9 +267,9 @@ class LoginWithEmailAndPasswordResource(Resource):
                 }
 
                 return response , 404
-                
+
             else:
-         
+
                 endpoint = f"https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key={api_key}"
                 # Assuming you're using JSON data for login credentials
                 data = request.get_json()
@@ -265,7 +285,7 @@ class LoginWithEmailAndPasswordResource(Resource):
                 res = requests.post(endpoint, json=data)
 
                 status_code = res.status_code
-                print(res.text)
+                # print(res.text)
 
 
                 if status_code == 200:
@@ -287,7 +307,7 @@ class LoginWithEmailAndPasswordResource(Resource):
                     # JWT Secret Key (Should be kept secret)
                     JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY")
                     payload = jwt.decode(token, JWT_SECRET_KEY, algorithms=["HS256"])
-            
+
                     clear_user_blacklist(localId)
 
                     data = {
@@ -302,7 +322,7 @@ class LoginWithEmailAndPasswordResource(Resource):
                         "message": "Login successful",
                         "data": data
                     }
-                    
+
                     return response , 200
                 else:
                     response = {
@@ -313,17 +333,17 @@ class LoginWithEmailAndPasswordResource(Resource):
 
                     return response , 401
 
-               
+
         except Exception as e:
             # Handle signup errors
             print("Failed to sign up:", e)
             return {"message": f"Signup failed: {str(e)}"}, 500
-      
+
 # logout
 class LogoutResource(Resource):
     # ออกจากระบบ
     def post(self):
-      
+
         try:
             data = request.get_json()
             # Extract email and password from the request data
@@ -332,18 +352,18 @@ class LogoutResource(Resource):
 
             if localId == "": # check localId empty
                 return {'message': 'Logout successful'}, 200
-            
-            
-            
+
+
+
             blacklist_token(localId,token)
-            
+
             if localId:
                 return {'message': 'Logout successful'}, 200
             else:
                 return {'error': 'Authorization header missing'}, 400
-            
-            
-            
+
+
+
             # db = firestore.client() # init db firebase
 
             # collection_ref = db.collection('token_blacklist')
@@ -357,13 +377,13 @@ class LogoutResource(Resource):
             # if not data_exist:
             #     set_data = {
             #         "localId": localId,
-            #         'token': token,                        
+            #         'token': token,
             #     }
 
-            
+
             #     # Create a batch object
             #     batch = db.batch()
-                
+
             #     # Reference to the 'favorite' collection
             #     collection_ref = db.collection('token_blacklist')
 
@@ -374,13 +394,13 @@ class LogoutResource(Resource):
             #     batch.set(document_ref, set_data)
             #     # Commit the batch
             #     batch.commit()
-        
+
         except Exception as e:
                 return {'error': str(e)}, 400
 
 
-     
-    
+
+
 class RefreshTokenResource(Resource):
     def post(self):
         # Parse refresh token data
@@ -400,7 +420,7 @@ class RefreshTokenResource(Resource):
             # JWT Secret Key (Should be kept secret)
             # JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY")
             payload = jwt.decode(new_jwt_token, JWT_SECRET_KEY, algorithms=["HS256"])
-            
+
             return {'message': 'Token refreshed successfully', 'token': new_jwt_token,'expTime':payload['exp']}, 200
         except jwt.ExpiredSignatureError:
             return {'message': 'Refresh token has expired'}, 401
@@ -415,19 +435,19 @@ class AuthWithAppResource(Resource):
         # idToken = request.json.get('idToken')
         email_ = request.json.get('email')
         localId = request.json.get('localId')
- 
+
         try:
             # print("idToken",idToken)
             # Verify ID token
             # decoded_token = auth.verify_id_token(idToken)
             # localId = decoded_token['uid']
             # print("localId",localId)
-            
+
             db = firestore.client()
             collection_ref = db.collection('users')
             # check data users from uid
             docs = collection_ref.where("localId", "==", localId).stream()
-            
+
             # check data in docs
             if any(docs):
                 token = generate_jwt_token(localId)
@@ -436,7 +456,7 @@ class AuthWithAppResource(Resource):
                 # JWT Secret Key (Should be kept secret)
                 JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY")
                 payload = jwt.decode(token, JWT_SECRET_KEY, algorithms=["HS256"])
-                
+
                 # clear_user_blacklist(localId)
 
                 data = {
@@ -445,13 +465,20 @@ class AuthWithAppResource(Resource):
                     "refreshToken": refresh_token,
                     "expTime": payload['exp']
                 }
-                    
+
                 response = {
                 "status": "1",
                 "message": "Authen successful",
                 "data": data
                 }
             else:
+
+                if email_ == "":
+                    return {'error': 'Email is required.'}, 400
+
+                if is_valid_email(email_) == False :
+                    return {'error': 'Email not correct.'}, 400
+
                 # กรณียังไม่มี localId ให้ insert ลง users
                 user_data = {
                     'localId': localId,
@@ -465,10 +492,10 @@ class AuthWithAppResource(Resource):
 
                 token = generate_jwt_token(localId)
                 refresh_token = generate_refresh_token(localId)
-                
+
                 JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY")
                 payload = jwt.decode(token, JWT_SECRET_KEY, algorithms=["HS256"])
-             
+
                 data = {
                     "localId": localId,
                     "token": token,
@@ -507,7 +534,35 @@ class SignupWithEmailAndPasswordResource(Resource):
         name = data.get('name')
         db = firestore.client()
 
+
         try:
+
+            if email == "":
+
+                response = {
+                    "status": "0",
+                    "message": "Email is required!",
+                }
+
+                return response, 400
+
+            if is_valid_email(email) == False:
+
+                response = {
+                    "status": "0",
+                    "message": "Email not correct!",
+                }
+
+                return response, 400
+
+            if validate_email_address(email) == False:
+
+                response = {
+                    "status": "0",
+                    "message": "Domain does not exist!",
+                }
+
+                return response, 400
 
             collection_ref = db.collection('users')
             query = collection_ref.where('email', '==', email)
@@ -518,7 +573,7 @@ class SignupWithEmailAndPasswordResource(Resource):
 
             if not email_exists:
                 print("Email does not exist in the database. You can proceed to insert the document.")
-         
+
                 # Check if the password meets the requirements
                 if len(password) < 6:
                     raise ValueError("Password must be at least 6 characters long")
@@ -546,28 +601,28 @@ class SignupWithEmailAndPasswordResource(Resource):
                 response = {
                     "status": "1",
                     "message": "Data retrieved successfully",
-                }   
-                
+                }
+
                 return response , 200
             else:
                 response = {
                     "status": "0",
                     "message": "Email already exists!",
-                }   
-                                  
-                return response, 409 
-        
+                }
+
+                return response, 409
+
         except Exception as e:
             # Handle signup errors
             print("Failed to sign up:", e)
             return {"message": f"Signup failed: {str(e)}"}, 500
-        
+
 
 
 class UpdateProfileResource(Resource):
     def post(self):
         try:
-          
+
             data = request.get_json()
             new_name = data.get('name')
             localId = data.get('localId')
@@ -591,7 +646,7 @@ class UpdateProfileResource(Resource):
         except Exception as e:
             # Handle exceptions
             error_message = f"An error occurred: {str(e)}"
-            return {"error": error_message}, 500  
+            return {"error": error_message}, 500
 
 
 # update password
@@ -618,4 +673,3 @@ class UpdatePasswordResource(Resource):
         except Exception as e:
             # Return error response if any exception occurs
             return {"error": str(e)}, 500
-        
