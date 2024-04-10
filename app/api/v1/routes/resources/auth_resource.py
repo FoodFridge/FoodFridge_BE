@@ -12,7 +12,7 @@ import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 import re
-
+from email_validator import validate_email
 
 
 load_dotenv()
@@ -186,7 +186,14 @@ def is_valid_email(email):
         return True
     else:
         return False
-    
+
+def validate_email_address(email):
+    try:
+        v = validate_email(email)
+        return True
+    except Exception as e:
+        return False
+
 class ResetPasswordResource(Resource):
     def post(self):
         
@@ -527,9 +534,11 @@ class SignupWithEmailAndPasswordResource(Resource):
         name = data.get('name')
         db = firestore.client()
 
+        
         try:
-
+            
             if email == "":
+               
                 response = {
                     "status": "0",
                     "message": "Email is required!",
@@ -538,12 +547,22 @@ class SignupWithEmailAndPasswordResource(Resource):
                 return response, 400
             
             if is_valid_email(email) == False:
+                
                 response = {
                     "status": "0",
                     "message": "Email not correct!",
                 }   
                                   
-                return response, 400 
+                return response, 400
+            
+            if validate_email_address(email) == False:
+
+                response = {
+                    "status": "0",
+                    "message": "Domain does not exist!",
+                }   
+
+                return response, 400
             
             collection_ref = db.collection('users')
             query = collection_ref.where('email', '==', email)
@@ -591,8 +610,8 @@ class SignupWithEmailAndPasswordResource(Resource):
                     "message": "Email already exists!",
                 }   
                                   
-                return response, 400 
-        
+                return response, 409
+            
         except Exception as e:
             # Handle signup errors
             print("Failed to sign up:", e)
