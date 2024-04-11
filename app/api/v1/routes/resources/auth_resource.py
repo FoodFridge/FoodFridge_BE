@@ -12,8 +12,6 @@ import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 import re
-from email_validator import validate_email
-
 
 load_dotenv()
 # JWT Secret Key (Should be kept secret)
@@ -187,13 +185,23 @@ def is_valid_email(email):
     else:
         return False
 
-def validate_email_address(email):
-    try:
-        v = validate_email(email)
-        return True
-    except Exception as e:
-        return False
 
+def validate_email_address(email):
+
+    _, domain = email.split('@')
+
+    try:
+        validate_email_address = ["gmail.com","yahoo.com", "outlook.com", "icloud.com", "aol.com", " protonmail.com",  "zoho.com", "tutanota.com", "mail.com" , "gmx.com" , "yandex.com", "fastmail.com",  "hushmail.com", "lycos.com", "rediffmail.com"]
+        if domain not in validate_email_address:
+            
+            return False
+        else:
+            return True
+        
+    except Exception as e:
+        return False, f"SMTP validation failed: {str(e)}"
+    
+    
 class ResetPasswordResource(Resource):
     def post(self):
         
@@ -397,8 +405,6 @@ class LogoutResource(Resource):
         
         except Exception as e:
                 return {'error': str(e)}, 400
-
-
      
     
 class RefreshTokenResource(Resource):
@@ -533,12 +539,11 @@ class SignupWithEmailAndPasswordResource(Resource):
         # user_id = uuid.uuid4().hex
         name = data.get('name')
         db = firestore.client()
-
         
         try:
             
             if email == "":
-               
+
                 response = {
                     "status": "0",
                     "message": "Email is required!",
@@ -559,10 +564,11 @@ class SignupWithEmailAndPasswordResource(Resource):
 
                 response = {
                     "status": "0",
-                    "message": "Domain does not exist!",
+                    "message": "Domain is not accepted to this app!",
                 }   
 
                 return response, 400
+
             
             collection_ref = db.collection('users')
             query = collection_ref.where('email', '==', email)
