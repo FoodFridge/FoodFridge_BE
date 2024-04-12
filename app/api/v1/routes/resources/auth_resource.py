@@ -12,8 +12,6 @@ import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 import re
-from email_validator import validate_email
-
 
 load_dotenv()
 # JWT Secret Key (Should be kept secret)
@@ -187,13 +185,23 @@ def is_valid_email(email):
     else:
         return False
 
-def validate_email_address(email):
-    try:
-        v = validate_email(email)
-        return True
-    except Exception as e:
-        return False
 
+def validate_email_address(email):
+
+    _, domain = email.split('@')
+
+    try:
+        validate_email_address = ["gmail.com","yahoo.com", "outlook.com", "icloud.com", "aol.com", " protonmail.com",  "zoho.com", "tutanota.com", "mail.com" , "gmx.com" , "yandex.com", "fastmail.com",  "hushmail.com", "lycos.com", "rediffmail.com","hotmail.com"]
+        if domain not in validate_email_address:
+            
+            return False
+        else:
+            return True
+        
+    except Exception as e:
+        return False, f"SMTP validation failed: {str(e)}"
+    
+    
 class ResetPasswordResource(Resource):
     def post(self):
 
@@ -397,10 +405,8 @@ class LogoutResource(Resource):
 
         except Exception as e:
                 return {'error': str(e)}, 400
-
-
-
-
+     
+    
 class RefreshTokenResource(Resource):
     def post(self):
         # Parse refresh token data
@@ -516,7 +522,6 @@ class AuthWithAppResource(Resource):
             return {'error': str(e)}, 400
 
 
-
 # signup with email , password
 class SignupWithEmailAndPasswordResource(Resource):
     def post(self):
@@ -533,7 +538,6 @@ class SignupWithEmailAndPasswordResource(Resource):
         # user_id = uuid.uuid4().hex
         name = data.get('name')
         db = firestore.client()
-
 
         try:
 
@@ -560,10 +564,10 @@ class SignupWithEmailAndPasswordResource(Resource):
                 response = {
                     "status": "0",
                     "message": "Domain does not exist!",
-                }
+                }   
 
                 return response, 400
-
+            
             collection_ref = db.collection('users')
             query = collection_ref.where('email', '==', email)
             docs = query.stream()
@@ -616,7 +620,6 @@ class SignupWithEmailAndPasswordResource(Resource):
             # Handle signup errors
             print("Failed to sign up:", e)
             return {"message": f"Signup failed: {str(e)}"}, 500
-
 
 
 class UpdateProfileResource(Resource):
@@ -673,3 +676,5 @@ class UpdatePasswordResource(Resource):
         except Exception as e:
             # Return error response if any exception occurs
             return {"error": str(e)}, 500
+
+
