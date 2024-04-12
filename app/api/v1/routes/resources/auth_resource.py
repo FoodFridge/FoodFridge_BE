@@ -191,7 +191,7 @@ def validate_email_address(email):
     _, domain = email.split('@')
 
     try:
-        validate_email_address = ["gmail.com","yahoo.com", "outlook.com", "icloud.com", "aol.com", " protonmail.com",  "zoho.com", "tutanota.com", "mail.com" , "gmx.com" , "yandex.com", "fastmail.com",  "hushmail.com", "lycos.com", "rediffmail.com"]
+        validate_email_address = ["gmail.com","yahoo.com", "outlook.com", "icloud.com", "aol.com", " protonmail.com",  "zoho.com", "tutanota.com", "mail.com" , "gmx.com" , "yandex.com", "fastmail.com",  "hushmail.com", "lycos.com", "rediffmail.com","hotmail.com"]
         if domain not in validate_email_address:
             
             return False
