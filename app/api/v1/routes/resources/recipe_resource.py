@@ -159,7 +159,7 @@ def search_menu_items(api_key, ingredients, start_index):
 
     if thai_pattern.search(ingredients_string):
         # If Thai characters are found, use the Thai term 'สูตร' in the query ขอวิธีทำ และสูตร ไม่เอารีวิว
-        url = f"https://www.googleapis.com/customsearch/v1?key={api_key}&cx=e21c2f9ab0e304589&q={ingredients}+วิธีทำ+สูตร+สูตรอาหาร&start={start_index}"
+        url = f"https://www.googleapis.com/customsearch/v1?key={api_key}&cx=e21c2f9ab0e304589&q={ingredients}+วิธีทำ+สูตร+สูตรอาหาร-รีวิว&start={start_index}"
     else:
         # If no Thai characters are found, proceed with the English term 'recipe'
         url = f"https://www.googleapis.com/customsearch/v1?key={api_key}&cx=e21c2f9ab0e304589&q={ingredients}+recipe&start={start_index}"
