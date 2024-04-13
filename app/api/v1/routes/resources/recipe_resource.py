@@ -4,6 +4,7 @@ import requests
 import logging
 from dotenv import load_dotenv
 import os
+import re
 import random
 from datetime import datetime
 
@@ -149,7 +150,21 @@ def getRecipeWithGoogle(data,ingredients):
 
 
 def search_menu_items(api_key, ingredients, start_index):
-    url = f"https://www.googleapis.com/customsearch/v1?key={api_key}&cx=e21c2f9ab0e304589&q={ingredients}+recipe&start={start_index}"
+    # Regular expression to detect Thai characters (Thai Unicode range: U+0E00 to U+0E7F)
+    # Check if ingredients contain any Thai characters
+    # Combine ingredients into a single string for regex processing
+    ingredients_string = ','.join(ingredients)
+
+    thai_pattern =  re.compile(r'[\u0E00-\u0E7F]+')
+
+    if thai_pattern.search(ingredients_string):
+        # If Thai characters are found, use the Thai term 'สูตร' in the query ขอวิธีทำ และสูตร ไม่เอารีวิว
+        url = f"https://www.googleapis.com/customsearch/v1?key={api_key}&cx=e21c2f9ab0e304589&q={ingredients}+วิธีทำ+สูตร+สูตรอาหาร&start={start_index}"
+    else:
+        # If no Thai characters are found, proceed with the English term 'recipe'
+        url = f"https://www.googleapis.com/customsearch/v1?key={api_key}&cx=e21c2f9ab0e304589&q={ingredients}+recipe&start={start_index}"
+
+
     response = requests.get(url)
     # print("ur",url)
     payload = {}
@@ -175,7 +190,8 @@ def retrieve_menu_items(api_key,ingredients, total_results):
             item_title =  item.get('title','')
             title_parts = item_title.split('|')  # แยกด้วย |
             title_parts = title_parts[0].split('-') # แยกแต่ละส่วนด้วย - และระบุเพียงส่วนแรกเท่านั้น
-            #title_parts = title_parts[0].split(':').strip()  # แยกแต่ละส่วนด้วย : และระบุเพียงส่วนแรกเท่านั้น
+            title_parts = title_parts[0].split(':')  # แยกแต่ละส่วนด้วย : และระบุเพียงส่วนแรกเท่านั้น
+            title_parts = title_parts[0].split('\u2022') # แยกแต่ละส่วนด้วย • และระบุเพียงส่วนแรกเท่านั้น
             title = title_parts[0]
 
             # title = title_[0].strip()
