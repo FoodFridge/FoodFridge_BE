@@ -16,6 +16,9 @@ from app.api.v1.routes.resources.auth_resource import LoginWithEmailAndPasswordR
 
 from app.api.v1.routes.resources.LinkRecipeResource2 import LinkRecipeResource2
 
+# update 15.04.24
+from app.api.v1.routes.resources.link_resource import LinkResource
+
 #Important: สำคัญมาก please don't forget to uncomment 'import awsgi' before push into GitHub.
 #ก่อน พุชโค้ด อย่าลืม อันคอมเม้นท์ด้วยนะคะ [^;^]. Otherwise, App will break. Cannot run back-end code in server.
 import awsgi
@@ -58,6 +61,11 @@ api.add_resource(AuthWithAppResource, '/api/v1/AuthWithApp') # refresh token
 api.add_resource(SignupWithEmailAndPasswordResource, '/api/v1/SignupWithEmailAndPassword') # refresh token
 api.add_resource(UpdateProfileResource, '/api/v1/UpdateProfile')
 api.add_resource(UpdatePasswordResource, '/api/v1/UpdatePassword')
+
+# update 15.04.24
+api.add_resource(LinkResource, '/api/v1/Link')
+
+
 
 # add searchPantry
 api.add_resource(SearchIngredientResource, '/api/v1/SearchIngredient')
