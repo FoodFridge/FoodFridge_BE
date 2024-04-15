@@ -9,6 +9,97 @@ from dotenv import load_dotenv
 import os
 import uuid
 import traceback
+import re
+import random
+from datetime import datetime
+
+def search_menu_items_recipe(api_key, recipe_name, start_index):
+    
+    end_index = start_index + 10
+
+    # If no Thai characters are found, proceed with the English term 'recipe'
+    url = f"https://www.googleapis.com/customsearch/v1?key={api_key}&cx=e21c2f9ab0e304589&q={recipe_name}+recipe&start={start_index}&end={end_index}"
+
+    response = requests.get(url)
+    # print("ur",url)
+    payload = {}
+    headers = {}
+
+    response = requests.request("GET", url, headers=headers, data=payload)
+
+    data = response.json()
+    # print("data",data)
+    return data.get('items', [])
+
+def retrieve_menu_items_recipe(api_key,ingredients, total_results):
+    menu_items = []
+    start_index = 1
+    
+    total = 0
+    
+    while len(menu_items) < total_results:
+        print("menu_items",len(menu_items))
+        total += 1
+        items = search_menu_items_recipe(api_key, ingredients, total)
+        
+        
+        if not items:
+            break
+        
+        for item in items:
+            # print("total",total)
+           
+            # title_ = item.get('title','').split('|')
+
+            item_title =  item.get('title','')
+            
+
+            title_parts = item_title.split('|')  # แยกด้วย |
+            title_parts = title_parts[0].split('-') # แยกแต่ละส่วนด้วย - และระบุเพียงส่วนแรกเท่านั้น
+            title_parts = title_parts[0].split(':')  # แยกแต่ละส่วนด้วย : และระบุเพียงส่วนแรกเท่านั้น
+            title_parts = title_parts[0].split('\u2022') # แยกแต่ละส่วนด้วย • และระบุเพียงส่วนแรกเท่านั้น
+            title = title_parts[0]
+            
+            
+            # สร้างอาร์เรย์สำหรับเก็บคำที่ต้องการตรวจสอบ
+            keywords_to_check = ["สล็อต","ลองเล่น","คาสิโนบาคา","รีวิวเกมสล็อต","fifa","m358e.com","พนัน"]
+            if not all(keyword not in title for keyword in keywords_to_check):
+                start_index += 1 
+                continue
+        
+            
+            flag_chk = False
+            for item_chk in menu_items:
+              
+                item_title_chk =  item_chk.get('title','')
+                if item_title_chk == title:
+                    flag_chk = True
+                    
+            if not flag_chk:
+                # Access the 'pagemap' dictionary within the item
+                pagemap = item.get('pagemap', {})
+
+                # Access the 'thumbnail' list within the pagemap
+                cse_image = pagemap.get('cse_image', [])
+
+                # Iterate through each thumbnail in the list
+                for thumbnail in cse_image:
+
+                    # Access the 'src' value within the thumbnail
+                    img = thumbnail.get('src', '')
+                    if img.startswith('https://') and img and is_image(img):
+                        
+                        concatenated_id = datetime.now().strftime("%Y%m%d%H%M%S") + ''.join(random.choices('0123456789', k=6))
+
+                        recipe_dict = {
+                            'id' : concatenated_id,
+                            'title' : title,
+                            'img' : img,
+                        }
+
+                        menu_items.append(recipe_dict)
+                        start_index += len(items)   
+    return menu_items[:total_results]  # Return up to the specified total_results
 
 class LinkRecipeResource2(Resource):
     def post(self):
