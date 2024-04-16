@@ -73,19 +73,17 @@ def retrieve_menu_items_link(api_key,recipe_name, total_results,local_id):
                     flag_chk = True
                     
             # ถ้ามี local_id ให้เช็ค timezone & author
-            if local_id:
-                user_timezone = request.headers.get('User-Timezone')
-
-                code = authorization(local_id,user_timezone)
-                if code != "":
-                    message = messageWithStatusCode(code)
-                    return {'message': message},code
+            if not flag_chk and local_id:
+                
 
                 collection_ref = db.collection('favorite')
 
                 # Construct the query
                 query = collection_ref.where('recipe_name', '==', recipe_name).where('user_id', '==', local_id)
                 docs = query.stream()
+                
+                
+             
 
                 dataFav = []
                 # get db favorite ของ local_id นั้นๆ
@@ -94,6 +92,10 @@ def retrieve_menu_items_link(api_key,recipe_name, total_results,local_id):
 
                     dataFav.append(doc_data)
                 
+                # print("dataFav",dataFav)
+                # return
+            
+            
                  # Check if the title is not present in dataFav
                 if all(doc.get('title', '') != title for doc in dataFav):
                     link = item.get('link', '')
@@ -125,6 +127,9 @@ def retrieve_menu_items_link(api_key,recipe_name, total_results,local_id):
                                     'user_id': local_id,
                                     # Add more fields as needed
                                 }
+                                
+                                # menu_items.append(favorite)
+                                # start_index += len(items)  
 
                                 # Reference to the 'favorite' collection
                                 collection_ref = db.collection('favorite')
@@ -160,18 +165,25 @@ def retrieve_menu_items_link(api_key,recipe_name, total_results,local_id):
                 if dataResult:
                     for item in dataResult:
 
-                        value = {
-                            "favId": item.get("document_id"),
-                            "img": item["data"].get("img"),
-                            "title": item["data"].get("title"),
-                            "url": item["data"].get("url"),
-                            "isFavorite": item["data"].get("status"),
-                            "userId": item["data"].get("user_id")
-                        }
-                        menu_items.append(value)
-                        start_index += len(items)   
+                        flag_chk_fav = False
+                        # เช็คว่าข้อมูลที่ get จาก database มีค่าเท่ากับค่าใน menu_items ให้ falg = true
+                        for item_current in menu_items:
+                            if item["data"].get("title") == item_current.get('title',''):
+                                flag_chk_fav = True
+                                
+                        # flag = false ให้เพิ่มข้อมูลลง menu_items
+                        if not flag_chk_fav:
+                            value = {
+                                "favId": item.get("document_id"),
+                                "img": item["data"].get("img"),
+                                "title": item["data"].get("title"),
+                                "url": item["data"].get("url"),
+                                "isFavorite": item["data"].get("status"),
+                                "userId": item["data"].get("user_id")
+                            }
+                            menu_items.append(value)
+                            start_index += len(items)   
 
-                    
 
             
             # ไม่มี local_id        
@@ -223,6 +235,14 @@ class LinkResource(Resource):
             # Check if API key is available
             if not api_key:
                 raise Exception("API key not found in the environment variables.")
+            
+            if localId:
+                user_timezone = request.headers.get('User-Timezone')
+
+                code = authorization(localId,user_timezone)
+                if code != "":
+                    message = messageWithStatusCode(code)
+                    return {'message': message},code
 
             menu_items = retrieve_menu_items_link(api_key, recipe_name,10,localId)
            
