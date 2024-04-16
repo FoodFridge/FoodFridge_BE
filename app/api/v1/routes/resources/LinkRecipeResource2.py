@@ -62,7 +62,7 @@ def retrieve_menu_items_recipe(api_key,ingredients, total_results):
             
             
             # สร้างอาร์เรย์สำหรับเก็บคำที่ต้องการตรวจสอบ
-            keywords_to_check = ["สล็อต","ลองเล่น","คาสิโนบาคา","รีวิวเกมสล็อต","fifa","m358e.com","พนัน"]
+            keywords_to_check = ["สล็อต","ลองเล่น","คาสิโนบาคา","รีวิวเกมสล็อต","fifa","m358e.com","พนัน","รีวิว"]
             if not all(keyword not in title for keyword in keywords_to_check):
                 start_index += 1 
                 continue
