@@ -677,4 +677,33 @@ class UpdatePasswordResource(Resource):
             # Return error response if any exception occurs
             return {"error": str(e)}, 500
 
+class DeleteUserAccount(Resource):
+    def delete(self):
 
+        data = request.get_json()
+        localId = data.get('localId')
+
+        user_timezone = request.headers.get('User-Timezone')
+
+        code = authorization(localId,user_timezone)
+
+        if code != "":
+            message = messageWithStatusCode(code)
+            return {'message': message},code
+        
+        try:
+
+            auth.delete_user(localId)
+
+            # Delete user account from Firestore
+            db = firestore.client()
+            doc_ref = db.collection('users').document(localId)
+            doc_ref.delete()
+                
+            return {"message": "User account deleted successfully"}, 200
+            
+        
+        except auth.AuthError as e:
+            return {"error": str(e)}, 400  # Firebase Authentication error
+        except Exception as e:
+            return {"error": str(e)}, 500  # Other unexpected errors
