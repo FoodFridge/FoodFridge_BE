@@ -12,7 +12,7 @@ from app.api.v1.routes.resources.pantry_resource import PantryResourceByUser, Ad
 
 from app.api.v1.routes.resources.users import Login_with_email_and_password, Logout, Sign_up_with_email_and_password,LoginWithGoogle,SignUpWithGoogle, Update_Name, Update_Password
 
-from app.api.v1.routes.resources.auth_resource import LoginWithEmailAndPasswordResource,LogoutResource,RefreshTokenResource,AuthWithAppResource,SignupWithEmailAndPasswordResource,UpdateProfileResource,UpdatePasswordResource,ResetPasswordResource
+from app.api.v1.routes.resources.auth_resource import DeleteUserAccount, LoginWithEmailAndPasswordResource,LogoutResource,RefreshTokenResource,AuthWithAppResource,SignupWithEmailAndPasswordResource,UpdateProfileResource,UpdatePasswordResource,ResetPasswordResource
 
 from app.api.v1.routes.resources.LinkRecipeResource2 import LinkRecipeResource2
 
@@ -71,6 +71,9 @@ api.add_resource(LinkResource, '/api/v1/Link')
 api.add_resource(SearchIngredientResource, '/api/v1/SearchIngredient')
 api.add_resource(ResetPasswordResource, '/api/v1/ResetPassword') # reset รหัสผ่านโดยการส่งลิ้ง reset password ไปที่อีเมล์
 
+
+# add delete user
+api.add_resource(DeleteUserAccount, '/api/v1/deleteUserAccount') # refresh token
 
 # AWS Lambda handler
 def lambda_handler(event, context):
