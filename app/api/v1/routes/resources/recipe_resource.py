@@ -8,6 +8,7 @@ import re
 import random
 from datetime import datetime
 
+# ไม่ใช้แล้ว
 class GenerateRecipeFromIngredients(Resource):
     def post(self):
         try:
@@ -250,6 +251,7 @@ def retrieve_menu_items(api_key,ingredients, total_results):
                         start_index += len(items)   
     return menu_items[:total_results]  # Return up to the specified total_results
 
+# ไม่ใช้แล้ว เปลี่ยนไปใช้ api with edamam แทน 28-04-2024
 class GenerateRecipeFromIngredientsWithGoogle(Resource):
     def post(self):
         try:
@@ -283,3 +285,89 @@ class GenerateRecipeFromIngredientsWithGoogle(Resource):
             error_message = f"An error occurred: {str(e)}"
             logging.error(error_message)
             return {"error": error_message}, 500
+        
+
+# current api generate recipe 28-04-2024
+class GenerateRecipeFromIngredientsWithEdamam(Resource):
+    def post(self):
+        try:
+
+            data = request.get_json()
+            ingredients = []
+
+           # Initialize an empty string to hold concatenated ingredients
+            ingredient_string = ""
+
+            # Loop through each value in the data dictionary
+            for value in data.values():
+                # Concatenate the value with a space
+                ingredient_string += value + "%2"
+
+            # Remove the trailing space
+            ingredient_string = ingredient_string.strip()
+
+            # Print or use the concatenated string
+            print(ingredient_string)
+
+
+            load_dotenv()
+            
+            # Access the API key from the environment variable
+            api_key = os.getenv("API_KEY_EDAMAM")
+            app_id = os.getenv("APP_ID_EDAMAM")
+            print("app_id"+app_id)
+            print("api_key"+api_key)
+            # Check if API key is available
+            if not api_key:
+                raise Exception("API key not found in the environment variables.")
+            
+            # Check if API key is available
+            if not app_id:
+                raise Exception("APP ID not found in the environment variables.")
+            
+            url = f"https://api.edamam.com/api/recipes/v2?type=public&q={ingredient_string}&app_id={app_id}&app_key={api_key}"
+            print("url"+url)
+
+            payload = {}
+            headers = {}
+
+            response = requests.request("GET", url, headers=headers, data=payload)
+
+            # print(response.text)
+            response_json = response.json()
+            print(response_json)
+             
+            # hits = data.get('hits', [])
+            # print("data "+data)
+            
+            recipe_data = []
+            if 'hits' in response_json and response_json.get('hits') != []:
+              
+                for item in response_json['hits']:
+                    recipe =  item.get('recipe','')
+                    label = recipe.get('label','')
+                    image = recipe.get('image','')
+                    concatenated_id = datetime.now().strftime("%Y%m%d%H%M%S") + ''.join(random.choices('0123456789', k=6))
+                     
+                    recipe_dict = {
+                            'id' : concatenated_id,
+                            'title' : label,
+                            'img' : image,
+                    }
+
+                    recipe_data.append(recipe_dict)
+                        
+                        
+                    print("label :"+label)
+                    # print("<br>")
+            
+                return recipe_data
+            else:
+                return {"error": 'not found!'}, 404
+            
+        except Exception as e:
+            # Handle the exception and return an appropriate response
+            error_message = f"An error occurred: {str(e)}"
+            logging.error(error_message)
+            return {"error": error_message}, 500
+

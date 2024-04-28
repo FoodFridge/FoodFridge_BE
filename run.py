@@ -1,12 +1,13 @@
 # run.py
 import secrets
 from flask import Flask
+from flasgger import Swagger
 from flask_restful import Api
 from app.core.firebase import initialize_firebase_app
 from app.api.v1.routes.resources.alpha_resource import AlphaResource
 from app.api.v1.routes.resources.ingredient_resource import IngredientResource ,IngredientResourceWithCategory, AddIngredients
 from app.api.v1.routes.resources.favorite_resource import AddFavoriteResource, FavoriteResourceByUser
-from app.api.v1.routes.resources.recipe_resource import GenerateRecipeFromIngredients,GenerateRecipeFromIngredientsWithGoogle
+from app.api.v1.routes.resources.recipe_resource import GenerateRecipeFromIngredients,GenerateRecipeFromIngredientsWithGoogle,GenerateRecipeFromIngredientsWithEdamam
 from app.api.v1.routes.resources.link_recipe_resource import LinkRecipeResource
 from app.api.v1.routes.resources.pantry_resource import PantryResourceByUser, AddPantryResource, EditPantryResource, DeletePantryResource, SearchIngredientResource
 
@@ -25,6 +26,15 @@ import awsgi
 
 app = Flask(__name__)
 api = Api(app)
+
+swagger = Swagger(app)
+
+# Define Swagger documentation
+app.config['SWAGGER'] = {
+    'title': 'Your API Documentation',
+    'uiversion': 3
+}
+
 secret_key = secrets.token_hex(32)
 app.secret_key = secret_key
 
@@ -38,6 +48,7 @@ api.add_resource(AddFavoriteResource, '/api/v1/favorite')
 api.add_resource(FavoriteResourceByUser, '/api/v1/favorite/<string:localId>/<string:is_favorite>')
 api.add_resource(GenerateRecipeFromIngredients, '/api/v1/GenerateRecipe')
 api.add_resource(GenerateRecipeFromIngredientsWithGoogle, '/api/v1/GenerateRecipeWithGoogle')
+api.add_resource(GenerateRecipeFromIngredientsWithEdamam, '/api/v1/GenerateRecipeWithEdamam') # 28-04-2024
 api.add_resource(AddIngredients, '/api/v1/addIngredients')
 api.add_resource(LinkRecipeResource, '/api/v1/LinkRecipe')
 api.add_resource(PantryResourceByUser, '/api/v1/pantry/<string:localId>')

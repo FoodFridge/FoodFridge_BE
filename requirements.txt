@@ -42,3 +42,4 @@ urllib3==1.26.18
 Werkzeug==3.0.1
 PyJWT==2.8.0
 email-validator==2.1.1
+flasgger==0.9.7.1
