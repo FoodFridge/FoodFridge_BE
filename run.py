@@ -22,18 +22,12 @@ from app.api.v1.routes.resources.link_resource import LinkResource
 
 #Important: สำคัญมาก please don't forget to uncomment 'import awsgi' before push into GitHub.
 #ก่อน พุชโค้ด อย่าลืม อันคอมเม้นท์ด้วยนะคะ [^;^]. Otherwise, App will break. Cannot run back-end code in server.
-import awsgi
+# import awsgi
 
 app = Flask(__name__)
 api = Api(app)
 
-swagger = Swagger(app)
 
-# Define Swagger documentation
-app.config['SWAGGER'] = {
-    'title': 'Your API Documentation',
-    'uiversion': 3
-}
 
 secret_key = secrets.token_hex(32)
 app.secret_key = secret_key
@@ -86,9 +80,22 @@ api.add_resource(ResetPasswordResource, '/api/v1/ResetPassword') # reset รห�
 # add delete user
 api.add_resource(DeleteUserAccount, '/api/v1/deleteUserAccount') # refresh token
 
+
+
+
+
 # AWS Lambda handler
 def lambda_handler(event, context):
     return awsgi.response(app, event, context)  # Use awsgi to wrap Flask app
+
+# Define Swagger documentation
+app.config['SWAGGER'] = {
+    'title': 'FoodFridge API',
+    'uiversion': 3
+}
+
+# Initialize Swagger
+swagger = Swagger(app)
 
 # Run the application locally if not running on AWS Lambda
 if __name__ == '__main__':

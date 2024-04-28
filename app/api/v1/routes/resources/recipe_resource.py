@@ -289,7 +289,28 @@ class GenerateRecipeFromIngredientsWithGoogle(Resource):
 
 # current api generate recipe 28-04-2024
 class GenerateRecipeFromIngredientsWithEdamam(Resource):
+    
     def post(self):
+        """
+    Generate a recipe with Edamam API.
+    ---
+    tags:
+      - Recipe
+    parameters:
+      - name: body
+        in: body
+        required: true
+        schema:
+          type: object
+          properties:
+            0:
+              type: string
+            1:
+              type: string
+    responses:
+      200:
+        description: Recipe generated successfully.
+    """
         try:
 
             data = request.get_json()
