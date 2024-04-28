@@ -301,7 +301,7 @@ class GenerateRecipeFromIngredientsWithEdamam(Resource):
             # Loop through each value in the data dictionary
             for value in data.values():
                 # Concatenate the value with a space
-                ingredient_string += value + "%2"
+                ingredient_string += value + " "
 
             # Remove the trailing space
             ingredient_string = ingredient_string.strip()
@@ -335,7 +335,7 @@ class GenerateRecipeFromIngredientsWithEdamam(Resource):
 
             # print(response.text)
             response_json = response.json()
-            print(response_json)
+            # print(response_json)
              
             # hits = data.get('hits', [])
             # print("data "+data)
