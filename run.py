@@ -6,7 +6,7 @@ from flask_restful import Api
 from app.core.firebase import initialize_firebase_app
 from app.api.v1.routes.resources.alpha_resource import AlphaResource
 from app.api.v1.routes.resources.ingredient_resource import IngredientResource ,IngredientResourceWithCategory, AddIngredients
-from app.api.v1.routes.resources.favorite_resource import AddFavoriteResource, FavoriteResourceByUser
+from app.api.v1.routes.resources.favorite_resource import AddFavoriteResource, FavoriteResourceByUser,FavoriteRecipeResourceByUser
 from app.api.v1.routes.resources.recipe_resource import GenerateRecipeFromIngredients,GenerateRecipeFromIngredientsWithGoogle,GenerateRecipeFromIngredientsWithEdamam
 from app.api.v1.routes.resources.link_recipe_resource import LinkRecipeResource
 from app.api.v1.routes.resources.pantry_resource import PantryResourceByUser, AddPantryResource, EditPantryResource, DeletePantryResource, SearchIngredientResource
@@ -22,7 +22,7 @@ from app.api.v1.routes.resources.link_resource import LinkResource
 
 #Important: สำคัญมาก please don't forget to uncomment 'import awsgi' before push into GitHub.
 #ก่อน พุชโค้ด อย่าลืม อันคอมเม้นท์ด้วยนะคะ [^;^]. Otherwise, App will break. Cannot run back-end code in server.
-import awsgi
+# import awsgi
 
 app = Flask(__name__)
 api = Api(app)
@@ -40,6 +40,11 @@ api.add_resource(IngredientResource, '/api/v1/ingredient') # ข้อมูล 
 api.add_resource(IngredientResourceWithCategory, '/api/v1/ingredient/<string:category>')
 api.add_resource(AddFavoriteResource, '/api/v1/favorite')
 api.add_resource(FavoriteResourceByUser, '/api/v1/favorite/<string:localId>/<string:is_favorite>')
+
+# 05-02-2024 Save favorite reice
+api.add_resource(FavoriteRecipeResourceByUser, '/api/v1/favoriteRecipe')
+
+
 api.add_resource(GenerateRecipeFromIngredients, '/api/v1/GenerateRecipe')
 api.add_resource(GenerateRecipeFromIngredientsWithGoogle, '/api/v1/GenerateRecipeWithGoogle')
 api.add_resource(GenerateRecipeFromIngredientsWithEdamam, '/api/v1/GenerateRecipeWithEdamam') # 28-04-2024

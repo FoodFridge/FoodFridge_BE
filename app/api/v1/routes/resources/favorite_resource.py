@@ -4,6 +4,34 @@ from firebase_admin import auth, initialize_app, credentials
 from app.core.firebase import initialize_firebase_app, firestore
 from app.api.v1.routes.resources.auth_resource import authorization, messageWithStatusCode
 # import logging
+
+class FavoriteRecipeResourceByUser(Resource):
+    #to do find user id
+    def post(self):
+        try:
+            # parameter json
+            data = request.get_json()
+            favId = data.get('favId')
+            isFavorite = data.get('isFavorite')
+            # Create a Firestore client
+            db = firestore.client()
+            # Specify the collection reference
+            collection_ref = db.collection('recipes')
+            # Reference to the specific document
+            document_ref = collection_ref.document(favId)
+            # Update the 'status' field to a new value (e.g., 'Y' for 'Yes')
+            document_ref.update({'favorite_status': isFavorite})
+            response = {
+                    "status": "1",
+                    "message": "Data updated successfully",
+            }
+            return response, 200
+        except Exception as e:
+            # Handle the exception and return an appropriate response
+            error_message = f"An error occurred: {str(e)}"
+            return {"error": error_message}, 500
+        
+        
 class FavoriteResourceByUser(Resource):
     def get(self,localId,is_favorite):
         try:
