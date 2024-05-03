@@ -1,12 +1,13 @@
 # run.py
 import secrets
 from flask import Flask
+from flasgger import Swagger
 from flask_restful import Api
 from app.core.firebase import initialize_firebase_app
 from app.api.v1.routes.resources.alpha_resource import AlphaResource
 from app.api.v1.routes.resources.ingredient_resource import IngredientResource ,IngredientResourceWithCategory, AddIngredients
-from app.api.v1.routes.resources.favorite_resource import AddFavoriteResource, FavoriteResourceByUser
-from app.api.v1.routes.resources.recipe_resource import GenerateRecipeFromIngredients,GenerateRecipeFromIngredientsWithGoogle
+from app.api.v1.routes.resources.favorite_resource import AddFavoriteResource, FavoriteResourceByUser,FavoriteRecipeResourceByUser
+from app.api.v1.routes.resources.recipe_resource import GenerateRecipeFromIngredients,GenerateRecipeFromIngredientsWithGoogle,GenerateRecipeFromIngredientsWithEdamam
 from app.api.v1.routes.resources.link_recipe_resource import LinkRecipeResource
 from app.api.v1.routes.resources.pantry_resource import PantryResourceByUser, AddPantryResource, EditPantryResource, DeletePantryResource, SearchIngredientResource
 
@@ -21,10 +22,13 @@ from app.api.v1.routes.resources.link_resource import LinkResource
 
 #Important: สำคัญมาก please don't forget to uncomment 'import awsgi' before push into GitHub.
 #ก่อน พุชโค้ด อย่าลืม อันคอมเม้นท์ด้วยนะคะ [^;^]. Otherwise, App will break. Cannot run back-end code in server.
-import awsgi
+# import awsgi
 
 app = Flask(__name__)
 api = Api(app)
+
+
+
 secret_key = secrets.token_hex(32)
 app.secret_key = secret_key
 
@@ -36,8 +40,14 @@ api.add_resource(IngredientResource, '/api/v1/ingredient') # ข้อมูล 
 api.add_resource(IngredientResourceWithCategory, '/api/v1/ingredient/<string:category>')
 api.add_resource(AddFavoriteResource, '/api/v1/favorite')
 api.add_resource(FavoriteResourceByUser, '/api/v1/favorite/<string:localId>/<string:is_favorite>')
+
+# 05-02-2024 Save favorite reice
+api.add_resource(FavoriteRecipeResourceByUser, '/api/v1/favoriteRecipe')
+
+
 api.add_resource(GenerateRecipeFromIngredients, '/api/v1/GenerateRecipe')
 api.add_resource(GenerateRecipeFromIngredientsWithGoogle, '/api/v1/GenerateRecipeWithGoogle')
+api.add_resource(GenerateRecipeFromIngredientsWithEdamam, '/api/v1/GenerateRecipeWithEdamam') # 28-04-2024
 api.add_resource(AddIngredients, '/api/v1/addIngredients')
 api.add_resource(LinkRecipeResource, '/api/v1/LinkRecipe')
 api.add_resource(PantryResourceByUser, '/api/v1/pantry/<string:localId>')
@@ -75,9 +85,22 @@ api.add_resource(ResetPasswordResource, '/api/v1/ResetPassword') # reset รห�
 # add delete user
 api.add_resource(DeleteUserAccount, '/api/v1/deleteUserAccount') # refresh token
 
+
+
+
+
 # AWS Lambda handler
 def lambda_handler(event, context):
     return awsgi.response(app, event, context)  # Use awsgi to wrap Flask app
+
+# Define Swagger documentation
+app.config['SWAGGER'] = {
+    'title': 'FoodFridge API',
+    'uiversion': 3
+}
+
+# Initialize Swagger
+swagger = Swagger(app)
 
 # Run the application locally if not running on AWS Lambda
 if __name__ == '__main__':
