@@ -692,13 +692,26 @@ class DeleteUserAccount(Resource):
             return {'message': message},code
         
         try:
-
-            auth.delete_user(localId)
-
-            # Delete user account from Firestore
             db = firestore.client()
             doc_ref = db.collection('users').document(localId)
+            inactive_user_ref = db.collection('inactive users').document(localId)
+            doc = doc_ref.get()
+            if doc.exists:
+
+                user_data = doc.to_dict()
+
+                inactive_user_ref.set({
+                    'localId': localId,
+                    'email': user_data.get('email'),
+                    'name': user_data.get('name'),
+                })
+
+
+            auth.delete_user(localId)
+            
+            # Delete user account from Firestore
             doc_ref.delete()
+
                 
             return {"message": "User account deleted successfully"}, 200
             
