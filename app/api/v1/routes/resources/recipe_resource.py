@@ -376,10 +376,30 @@ class GenerateRecipeFromIngredientsWithEdamam(Resource):
             db = firestore.client()
             batch = db.batch()
                 
+            url_blacklist = [
+                "https://www.epicurious.com",
+                "https://www.marthastewart.com",
+                "https://www.cookingchanneltv.com",
+                "https://www.saveur.com",
+                "https://food52.com",
+                "https://www.foodnetwork.com",
+                "https://www.cookingchanneltv.com",
+                "https://www.foodandwine.com",
+                "https://www.bonappetit.com",
+            ]
+            
+            # กรณี ไม่มี local_id
+            if not local_id:
+                guest_id = "GUEST_"+datetime.now().strftime("%Y%m%d%H%M%S") + ''.join(random.choices('0123456789', k=6))
+                local_id = guest_id    
+
             recipe_data = []
             if 'hits' in response_json and response_json.get('hits') != []:
               
+                index = 0
                 for item in response_json['hits']:
+                    # print(item)
+                    # print("\n\n\n")
                     recipe =  item.get('recipe','') # data
                     label = recipe.get('label','') # ชื่อเมนู
                     image = recipe.get('image','') # รูปภาพเมนู
@@ -387,91 +407,81 @@ class GenerateRecipeFromIngredientsWithEdamam(Resource):
                     
                    
                     # เช็ค url https                     
-                    if link.startswith('https://'):
+                    if link.startswith('https://') and not any(blacklisted_url in link for blacklisted_url in url_blacklist):
                     
-                        # กรณี ไม่มี local_id
-                        if not local_id:
-                            concatenated_id = datetime.now().strftime("%Y%m%d%H%M%S") + ''.join(random.choices('0123456789', k=6))
-                            
+                        concatenated_id = datetime.now().strftime("%Y%m%d%H%M%S") + ''.join(random.choices('0123456789', k=6))
+                        
+                        # get ข้อมูล recipe
+                        collection_ref = db.collection('recipes')
+
+                        # where เงื่อนไข
+                        query = collection_ref.where('title', '==', label).where('local_id', '==', local_id)
+
+                        docs = query.stream()
+                        dataResult = []
+                       
+                        # กรณี - มีข้อมูล recipe
+                        if not docs:
+                            favorite_status = document_id = ""
+                            for item in dataResult:
+                                        
+                                print("title",item.get('title'))
+                                print("label",label)
+                                print("\n\n")
+                               
+                                document_ref = collection_ref.document()
+                                document_id = document_ref.id
+                                            
+                                # ถ้าเจอ title ที่ต้องการ ก็ดึงค่า favorite_status ออกมา
+                                favorite_status = item.get('favorite_status')
+                               
+                                            
+                                recipe_dict = {
+                                    'id' : document_id,
+                                    'title' : label,
+                                    'img' : image,
+                                    'link' : link,
+                                    'favorite_status' : favorite_status,
+                                    'local_id' : local_id
+                                }
+                                            
+                                recipe_data.append(recipe_dict)
+                                    
+                        else:
+                            collection_ref1 = db.collection('recipes')
+                            document_ref1 = collection_ref1.document()
+                            document_id = document_ref1.id
                             recipe_dict = {
-                                'id' : concatenated_id,
+                                'id' : document_id,
                                 'title' : label,
                                 'img' : image,
                                 'link' : link,
                                 'favorite_status' : 'N',
-                                'local_id' : ''
+                                'local_id' : local_id
                             }
+
                             recipe_data.append(recipe_dict)
+
+                            document_ref1 = collection_ref1.document()
+                            batch.set(document_ref1, recipe_dict)
                             
-                        else:
-                                
-                            concatenated_id = datetime.now().strftime("%Y%m%d%H%M%S") + ''.join(random.choices('0123456789', k=6))
-                        
-                        
-                            # select data base
-                            collection_ref = db.collection('recipes')
-
-                            # where เงื่อนไข
-                            query = collection_ref.where('title', '==', label).where('local_id', '==', local_id)
-
-                            docs = query.stream()
-                            dataResult = []
-                            for doc in docs:
-                                doc_data = doc.to_dict()
-
-                                dataResult.append(doc_data)
-
-                            # Check if the title is not present in dataFav
-                            if all(doc.get('title', '') != label for doc in dataResult):
-                        
-                                collection_ref1 = db.collection('recipes')
-                                document_ref1 = collection_ref1.document()
-                                document_id = document_ref1.id
-                                recipe_dict = {
-                                        'id' : document_id,
-                                        'title' : label,
-                                        'img' : image,
-                                        'link' : link,
-                                        'favorite_status' : 'N',
-                                        'local_id' : local_id
-                                }
-
-                                recipe_data.append(recipe_dict)
-                                
+                        index = index + 1    
                             
-                                document_ref1 = collection_ref1.document()
-                                batch.set(document_ref1, recipe_dict)
-                                    
-                                print("label :"+label)
-                            # print("<br>")
-                            
-                            else:
-                                favorite_status = document_id = ""
-                                # วนลูปทุกๆ รายการใน dataResult
-                                for doc_data in dataResult:
-                                    # ตรวจสอบว่า title เป็นไปตามที่ต้องการหรือไม่
-                                    if doc_data.get('title') == label:
-                                        document_ref = collection_ref.document()
-                                        document_id = document_ref.id
-                                        
-                                        # ถ้าเจอ title ที่ต้องการ ก็ดึงค่า favorite_status ออกมา
-                                        favorite_status = doc_data.get('favorite_status')
-                                        # หยุดการวนลูปเนื่องจากเราได้หาค่าที่ต้องการแล้ว
-                                        break
-                                    
-                                recipe_dict = {
-                                        'id' : document_id,
-                                        'title' : label,
-                                        'img' : image,
-                                        'link' : link,
-                                        'favorite_status' : favorite_status,
-                                        'local_id' : local_id
-                                }
-                                
-                                recipe_data.append(recipe_dict)
                 
-                        # Commit the batch
-                        batch.commit()
+                        
+                collection_ref = db.collection('logs_recipe_generate')
+                document_id = collection_ref.document().id
+                logs= {
+                    'created': datetime.now(),
+                    'local_id': local_id,
+                    'total_result_recipe': index,
+                }
+
+                collection_ref.document(document_id).set(logs)
+                
+                # Commit the batch
+                batch.commit()
+            
                 return recipe_data
             else:
                 return {"error": 'not found!'}, 404

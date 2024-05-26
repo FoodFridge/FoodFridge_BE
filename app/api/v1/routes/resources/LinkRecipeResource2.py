@@ -180,13 +180,11 @@ class LinkRecipeResource2(Resource):
                                     links.append(favorite)
 
                         else:
-                            user_timezone = request.headers.get('User-Timezone')
+                            # user_timezone = request.headers.get('User-Timezone')
 
-                            code = authorization(localId,user_timezone)
-                            print("code",code)
-                            if code != "":
-                                message = messageWithStatusCode(code)
-                                return {'message': message},code
+                            code, response = authorization(localId)
+                            if code != 200:
+                                return response, code
 
                             collection_ref = db.collection('favorite')
                             # docs = collection_ref.stream()

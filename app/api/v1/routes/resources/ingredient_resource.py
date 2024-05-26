@@ -17,15 +17,13 @@ class IngredientResource(Resource):
             db = firestore.client()
 
             data = []
-            user_timezone = request.headers.get('User-Timezone')
+            # user_timezone = request.headers.get('User-Timezone')
+            
             if localId:
                 #authen
-                code = authorization(localId,user_timezone)
-                print("code",code)
-                if code != "":
-                    message = messageWithStatusCode(code)
-                    print(message)
-                    return {'message': message},code
+                code, response = authorization(localId)
+                if code != 200:
+                    return response, code
                 
                 collection_ref2 = db.collection('pantry')
                 query = collection_ref2.where('user_id', '==', localId)

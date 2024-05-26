@@ -49,13 +49,11 @@ class FavoriteResourceByUser(Resource):
 
             # if not decoded_token['uid']:
             #     return {"error": "uid invalid."}, 401
-            user_timezone = request.headers.get('User-Timezone')
+            # user_timezone = request.headers.get('User-Timezone')
 
-            code = authorization(localId,user_timezone)
-            print("code",code)
-            if code != "":
-                message = messageWithStatusCode(code)
-                return {'message': message},code
+            code, response = authorization(localId)
+            if code != 200:
+                return response, code
         
             db = firestore.client()
             collection_ref = db.collection('favorite')
