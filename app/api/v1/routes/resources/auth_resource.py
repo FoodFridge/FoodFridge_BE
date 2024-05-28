@@ -50,63 +50,101 @@ def messageWithStatusCode(choice):
     message_func = switch.get(choice, lambda: "Invalid choice")
     return message_func()
 
-def authorization(localId,user_timezone):
-    statusCode = ""
-    authorization_header = request.headers.get('Authorization')
-    if authorization_header and authorization_header.startswith('Bearer '):
-        jwt_token = authorization_header.split(' ')[1]
-        print("jwt_token",jwt_token)
+def authorization(localId):
+    try:
+        statusCode = 200
+        authorization_header = request.headers.get('Authorization')
+        if authorization_header and authorization_header.startswith('Bearer '):
+            jwt_token = authorization_header.split(' ')[1]
 
-        db = firestore.client() # init db firebase
+            # Check blacklist token
+            data_blacklist = is_token_blacklisted(localId, jwt_token)
+            if data_blacklist:
+                return 500, {"error": "Token is blacklisted"}
 
-        collection_ref = db.collection('token_blacklist')
-        query = collection_ref.where('localId', '==', localId).where('token', '==', jwt_token)
-        docs = query.stream()
+            load_dotenv()
+            # JWT_SECRET_KEY should be kept secret
+            JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY")
 
+            # Verify JWT token
+            payload = jwt.decode(jwt_token, JWT_SECRET_KEY, algorithms=["HS256"])
+            user_timezone = payload.get('timezone')
+            if user_timezone:
+                user_timezone = pytz.timezone(user_timezone)
+            else:
+                return 400, {"error": "Timezone not found in token"}
 
-        # Check if any documents are returned
-        # data_blacklist = any(docs)
-        data_blacklist = is_token_blacklisted(localId,jwt_token)
-        print("data_blacklist",data_blacklist)
-        if data_blacklist:
-            statusCode = 500
+            # Get the current time in the user's timezone
+            current_time = datetime.now(user_timezone)
 
+            # Assuming payload['exp'] contains a timestamp in UTC
+            exp_timestamp = payload.get('exp')
+            if not exp_timestamp:
+                return 400, {"error": "Expiration time not found in token"}
 
-        load_dotenv()
-        # JWT Secret Key (Should be kept secret)
-        JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY")
-        # Verify JWT token
-        payload = jwt.decode(jwt_token, JWT_SECRET_KEY, algorithms=["HS256"])
+            # Convert the expiration timestamp to the user's timezone
+            exp_datetime = datetime.fromtimestamp(exp_timestamp, pytz.utc).astimezone(user_timezone)
 
-        print("payload",payload)
-        # Check token expiration
-        # issue timezone
-        # if datetime.utcnow() > datetime.fromtimestamp(payload['exp']):
-            # statusCode = 401
+            # Compare the current time with the expiration datetime
+            if current_time > exp_datetime:
+                return 401, {"error": "Token has expired"}
+        else:
+            return 401, {"error": "Authorization header missing or invalid"}
+        return statusCode, {}
+    except jwt.ExpiredSignatureError:
+        return 401, {"error": "Token has expired"}
+    except jwt.InvalidTokenError:
+        return 401, {"error": "Invalid token"}
+    except Exception as e:
+        return 500, {"error": "Internal server error", "message": str(e)}
+    
+# def authorization(localId):
+#     try:
+#         statusCode = ""
+#         authorization_header = request.headers.get('Authorization')
+#         if authorization_header and authorization_header.startswith('Bearer '):
+#             jwt_token = authorization_header.split(' ')[1]
 
+#             # Check blacklist token
+#             data_blacklist = is_token_blacklisted(localId,jwt_token)
+#             if data_blacklist:
+#                 return 500, {"error": "Token is blacklisted"}
 
-        user_timezone = pytz.timezone(user_timezone)
+#             load_dotenv()
+#             # JWT Secret Key (Should be kept secret)
+#             JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY")
+            
+#             # Verify JWT token
+#             payload = jwt.decode(jwt_token, JWT_SECRET_KEY, algorithms=["HS256"])
+#             user_timezone = payload['timezone']
+#             print("payload",payload)
+#             user_timezone = pytz.timezone(user_timezone)
 
-        # Get the current time in the user's timezone
-        current_time = datetime.now(user_timezone)
+#             # Get the current time in the user's timezone
+#             current_time = datetime.now(user_timezone)
 
-        # Assuming payload['exp'] contains a timestamp in UTC
-        exp_timestamp = payload['exp']
+#             # Assuming payload['exp'] contains a timestamp in UTC
+#             exp_timestamp = payload['exp']
 
-        # Convert the expiration timestamp to the user's timezone
-        exp_datetime = datetime.fromtimestamp(exp_timestamp, pytz.utc).astimezone(user_timezone)
+#             # Convert the expiration timestamp to the user's timezone
+#             exp_datetime = datetime.fromtimestamp(exp_timestamp, pytz.utc).astimezone(user_timezone)
 
-        # Compare the current time with the expiration datetime
-        if current_time > exp_datetime:
-            statusCode = 401
-    else:
-        statusCode = 401
-    return statusCode
-
+#             # Compare the current time with the expiration datetime
+#             if current_time > exp_datetime:
+#                 return 401, {"error": "Token has expired"}
+#         else:
+#             return 401, {"error": "Token has expired"}
+#     except jwt.ExpiredSignatureError:
+#         return 401, {"error": "Token has expired"}
+#     except jwt.InvalidTokenError:
+#         return 401, {"error": "Invalid token"}
+#     except Exception as e:
+#         return 500, {"error": "Internal server error", "message": str(e)}
+    
+   
 # Function to generate JWT token with expiration time
-def generate_jwt_token(localId):
+def generate_jwt_token(localId,user_timezone):
     # Set token expiration time (e.g., 1 seconds , hours , days)
-
     load_dotenv()
 
     EXPIRE_TOKEN = os.getenv("EXPIRE_TOKEN")
@@ -116,6 +154,7 @@ def generate_jwt_token(localId):
     # Create payload with username and expiration time
     payload = {
         'localId': localId,
+        'timezone': user_timezone,
         'exp': expiration_time
     }
 
@@ -258,6 +297,8 @@ class LoginWithEmailAndPasswordResource(Resource):
             auth_data = auth_parser.parse_args()
             email = auth_data['email']
             password = auth_data['password']
+            # 26-05-2024
+            user_timezone = request.headers.get('User-Timezone')
 
             load_dotenv()
             api_key = os.getenv("api_key")
@@ -306,7 +347,7 @@ class LoginWithEmailAndPasswordResource(Resource):
 
                     # print(docs)
 
-                    token = generate_jwt_token(localId)
+                    token = generate_jwt_token(localId,user_timezone)
                     # token = arr[0]
                     # exp = arr[1]
                     refresh_token = generate_refresh_token(localId)
@@ -316,6 +357,10 @@ class LoginWithEmailAndPasswordResource(Resource):
                     JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY")
                     payload = jwt.decode(token, JWT_SECRET_KEY, algorithms=["HS256"])
 
+                    user_timezone = payload['timezone']
+                    print("user_timezone",user_timezone)
+
+                    # clear token blacklist by local_id
                     clear_user_blacklist(localId)
 
                     data = {
@@ -572,12 +617,19 @@ class SignupWithEmailAndPasswordResource(Resource):
             query = collection_ref.where('email', '==', email)
             docs = query.stream()
 
+            # Convert the stream to a list to check for existence and access elements
+            docs_list = list(docs)
+
+            email_exists = False
             # Check if any documents are returned
-            email_exists = any(docs)
+            if docs_list:
+                email_exists = True
+                # Access the first document's ID
+                local_id_exist = docs_list[0].id
+                print("local_id_exist:", local_id_exist)
 
-            if not email_exists:
-                print("Email does not exist in the database. You can proceed to insert the document.")
 
+            if email_exists == False:
                 # Check if the password meets the requirements
                 if len(password) < 6:
                     raise ValueError("Password must be at least 6 characters long")
@@ -590,9 +642,13 @@ class SignupWithEmailAndPasswordResource(Resource):
 
                 # Send POST request
                 response = requests.post(endpoint, json=data)
+                if response.status_code != 200:
+                    print("Error response:", response.json())
+                    return jsonify({"status": "0", "message": "Error in signup process"}), 400
 
                 # localId = uid
                 localId =  response.json().get("localId")
+                print("response",localId)
 
                 # set uid = document id
                 user_ref = db.collection('users').document(localId)
@@ -604,6 +660,7 @@ class SignupWithEmailAndPasswordResource(Resource):
 
                 response = {
                     "status": "1",
+                    'local_id': localId,
                     "message": "Data retrieved successfully",
                 }
 
@@ -611,6 +668,7 @@ class SignupWithEmailAndPasswordResource(Resource):
             else:
                 response = {
                     "status": "0",
+                    "local_id":local_id_exist,
                     "message": "Email already exists!",
                 }
 
@@ -630,11 +688,9 @@ class UpdateProfileResource(Resource):
             new_name = data.get('name')
             localId = data.get('localId')
 
-            code = authorization(localId)
-            print("code",code)
-            if code != "":
-                message = messageWithStatusCode(code)
-                return {'message': message},code
+            code, response = authorization(localId)
+            if code != 200:
+                return response, code
 
             db = firestore.client()
             doc_ref = db.collection('users').document(localId)
@@ -661,11 +717,9 @@ class UpdatePasswordResource(Resource):
             new_password = data.get('password')
             localId = data.get('localId')
 
-            code = authorization(localId)
-            print("code",code)
-            if code != "":
-                message = messageWithStatusCode(code)
-                return {'message': message},code
+            code, response = authorization(localId)
+            if code != 200:
+                return response, code
 
             # Update password using Firebase Authentication
             user = auth.update_user(localId, password=new_password)
@@ -683,24 +737,37 @@ class DeleteUserAccount(Resource):
         data = request.get_json()
         localId = data.get('localId')
 
-        user_timezone = request.headers.get('User-Timezone')
-
-        code = authorization(localId,user_timezone)
-
-        if code != "":
-            message = messageWithStatusCode(code)
-            return {'message': message},code
+        # user_timezone = request.headers.get('User-Timezone')     
+        code, response = authorization(localId)
+        if code != 200:
+            return response, code
+    
+        # return
         
         try:
-
-            auth.delete_user(localId)
-
-            # Delete user account from Firestore
             db = firestore.client()
             doc_ref = db.collection('users').document(localId)
-            doc_ref.delete()
-                
-            return {"message": "User account deleted successfully"}, 200
+            inactive_user_ref = db.collection('inactive users').document(localId)
+            doc = doc_ref.get()
+            if doc.exists:
+
+                user_data = doc.to_dict()
+
+                inactive_user_ref.set({
+                    'localId': localId,
+                    'email': user_data.get('email'),
+                    'name': user_data.get('name'),
+                })
+
+
+                auth.delete_user(localId)
+            
+                # Delete user account from Firestore
+                doc_ref.delete()
+
+                return {"message": "User account deleted successfully"}, 200
+            else:
+                return {"message": "User account doesn't exists"}, 404
             
         
         except auth.AuthError as e:

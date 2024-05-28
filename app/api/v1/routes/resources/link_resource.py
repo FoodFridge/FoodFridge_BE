@@ -237,9 +237,9 @@ class LinkResource(Resource):
                 raise Exception("API key not found in the environment variables.")
             
             if localId:
-                user_timezone = request.headers.get('User-Timezone')
+                # user_timezone = request.headers.get('User-Timezone')
 
-                code = authorization(localId,user_timezone)
+                code = authorization(localId)
                 if code != "":
                     message = messageWithStatusCode(code)
                     return {'message': message},code

@@ -12,11 +12,9 @@ class PantryResourceByUser(Resource):
         try:
 
             user_timezone = request.headers.get('User-Timezone')
-            code = authorization(localId, user_timezone)
-            print("code",code)
-            if code != "":
-                message = messageWithStatusCode(code)
-                return {'message': message},code
+            code, response = authorization(localId)
+            if code != 200:
+                return response, code
 
            # Regular expression pattern to match "America" in a case-insensitive manner
             pattern = re.compile(r'(?i)America')
