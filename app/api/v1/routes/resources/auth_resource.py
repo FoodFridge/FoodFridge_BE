@@ -658,10 +658,33 @@ class SignupWithEmailAndPasswordResource(Resource):
                     'name': name,
                 })
 
+                user_timezone = request.headers.get('User-Timezone')
+                token = generate_jwt_token(localId,user_timezone)
+
+                refresh_token = generate_refresh_token(localId)
+
+                load_dotenv()
+                api_key = os.getenv("api_key")
+
+                endpoint = f"https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key={api_key}"
+
+                JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY")
+                payload = jwt.decode(token, JWT_SECRET_KEY, algorithms=["HS256"])
+                
+                user_timezone = payload['timezone']
+
+                data = {
+                        "localId": localId,
+                        "token": token,
+                        "refreshToken": refresh_token,
+                        "expTime": payload['exp']
+                }
+
                 response = {
                     "status": "1",
                     'local_id': localId,
                     "message": "Data retrieved successfully",
+                    "data": data
                 }
 
                 return response , 200
