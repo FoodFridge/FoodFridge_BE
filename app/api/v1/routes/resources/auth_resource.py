@@ -487,6 +487,8 @@ class AuthWithAppResource(Resource):
         email_ = request.json.get('email')
         localId = request.json.get('localId')
 
+        user_timezone = request.headers.get('User-Timezone')
+
         try:
             # print("idToken",idToken)
             # Verify ID token
@@ -501,8 +503,9 @@ class AuthWithAppResource(Resource):
 
             # check data in docs
             if any(docs):
-                token = generate_jwt_token(localId)
+                token = generate_jwt_token(localId,user_timezone)
                 refresh_token = generate_refresh_token(localId)
+
 
                 # JWT Secret Key (Should be kept secret)
                 JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY")
@@ -658,10 +661,33 @@ class SignupWithEmailAndPasswordResource(Resource):
                     'name': name,
                 })
 
+                user_timezone = request.headers.get('User-Timezone')
+                token = generate_jwt_token(localId,user_timezone)
+
+                refresh_token = generate_refresh_token(localId)
+
+                load_dotenv()
+                api_key = os.getenv("api_key")
+
+                endpoint = f"https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key={api_key}"
+
+                JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY")
+                payload = jwt.decode(token, JWT_SECRET_KEY, algorithms=["HS256"])
+                
+                user_timezone = payload['timezone']
+
+                data = {
+                        "localId": localId,
+                        "token": token,
+                        "refreshToken": refresh_token,
+                        "expTime": payload['exp']
+                }
+
                 response = {
                     "status": "1",
                     'local_id': localId,
                     "message": "Data retrieved successfully",
+                    "data": data
                 }
 
                 return response , 200
