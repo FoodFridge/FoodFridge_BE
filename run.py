@@ -6,7 +6,7 @@ from flask_restful import Api
 from app.core.firebase import initialize_firebase_app
 from app.api.v1.routes.resources.alpha_resource import AlphaResource
 from app.api.v1.routes.resources.ingredient_resource import IngredientResource ,IngredientResourceWithCategory, AddIngredients
-from app.api.v1.routes.resources.favorite_resource import AddFavoriteResource, FavoriteResourceByUser,FavoriteRecipeResourceByUser
+from app.api.v1.routes.resources.favorite_resource import FavoriteRecipeResource
 from app.api.v1.routes.resources.recipe_resource import GenerateRecipeFromIngredients,GenerateRecipeFromIngredientsWithGoogle,GenerateRecipeFromIngredientsWithEdamam
 from app.api.v1.routes.resources.link_recipe_resource import LinkRecipeResource
 from app.api.v1.routes.resources.pantry_resource import PantryResourceByUser, AddPantryResource, EditPantryResource, DeletePantryResource, SearchIngredientResource
@@ -38,14 +38,17 @@ initialize_firebase_app()
 api.add_resource(AlphaResource, '/api/v1/alpha/<string:type>')
 api.add_resource(IngredientResource, '/api/v1/ingredient') # ข้อมูล ingredient ทั้งหมด
 api.add_resource(IngredientResourceWithCategory, '/api/v1/ingredient/<string:category>')
-api.add_resource(AddFavoriteResource, '/api/v1/favorite')
-api.add_resource(FavoriteResourceByUser, '/api/v1/favorite/<string:localId>/<string:is_favorite>')
+# api.add_resource(AddFavoriteResource, '/api/v1/favorite')
+# api.add_resource(FavoriteResourceByUser, '/api/v1/favorite/<string:localId>/<string:is_favorite>')
 
 # 05-02-2024 Save favorite reice
-api.add_resource(FavoriteRecipeResourceByUser, '/api/v1/favoriteRecipe')
+# api.add_resource(FavoriteRecipeResourceByUser, '/api/v1/favoriteRecipe')
+
+api.add_resource(FavoriteRecipeResource, '/api/v1/favoriteRecipe')
 
 
-api.add_resource(GenerateRecipeFromIngredients, '/api/v1/GenerateRecipe')
+
+# api.add_resource(GenerateRecipeFromIngredients, '/api/v1/GenerateRecipe')
 api.add_resource(GenerateRecipeFromIngredientsWithGoogle, '/api/v1/GenerateRecipeWithGoogle')
 api.add_resource(GenerateRecipeFromIngredientsWithEdamam, '/api/v1/GenerateRecipeWithEdamam') # 28-04-2024
 api.add_resource(AddIngredients, '/api/v1/addIngredients')
