@@ -7,7 +7,7 @@ import os
 import re
 import random
 from datetime import datetime
-from app.core.firebase import initialize_firebase_app, firestore
+from app.core.firebase import initialize_firebase_app, firestore 
 
 # ไม่ใช้แล้ว
 class GenerateRecipeFromIngredients(Resource):
@@ -416,12 +416,17 @@ class GenerateRecipeFromIngredientsWithEdamam(Resource):
 
                         # where เงื่อนไข
                         query = collection_ref.where('title', '==', label).where('local_id', '==', local_id)
+                      
 
                         docs = query.stream()
                         dataResult = []
+
+                        for doc in docs:
+                            dataResult.append(doc.to_dict())
+
                        
                         # กรณี - มีข้อมูล recipe
-                        if not docs:
+                        if dataResult:
                             favorite_status = document_id = ""
                             for item in dataResult:
                                         
@@ -429,11 +434,12 @@ class GenerateRecipeFromIngredientsWithEdamam(Resource):
                                 print("label",label)
                                 print("\n\n")
                                
-                                document_ref = collection_ref.document()
-                                document_id = document_ref.id
+                                document_id = item.get('id')  # Get the document ID
                                             
                                 # ถ้าเจอ title ที่ต้องการ ก็ดึงค่า favorite_status ออกมา
                                 favorite_status = item.get('favorite_status')
+
+                                print("document_id",document_id)
                                
                                             
                                 recipe_dict = {
@@ -451,6 +457,9 @@ class GenerateRecipeFromIngredientsWithEdamam(Resource):
                             collection_ref1 = db.collection('recipes')
                             document_ref1 = collection_ref1.document()
                             document_id = document_ref1.id
+                            print("document_ref1")
+                            print("document_id",document_id)
+
                             recipe_dict = {
                                 'id' : document_id,
                                 'title' : label,
@@ -461,8 +470,6 @@ class GenerateRecipeFromIngredientsWithEdamam(Resource):
                             }
 
                             recipe_data.append(recipe_dict)
-
-                            document_ref1 = collection_ref1.document()
                             batch.set(document_ref1, recipe_dict)
                             
                         index = index + 1    
