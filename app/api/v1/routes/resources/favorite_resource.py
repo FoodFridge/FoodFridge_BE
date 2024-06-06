@@ -160,35 +160,38 @@ class FavoriteRecipeResource(Resource):
                 # Update the 'status' field to the new value
                 document_ref.update({'favorite_status': isFavorite})
 
-                query = collection_ref.where('local_id', '==', local_id)
-                      
+                # query = collection_ref.where('local_id', '==', local_id)
+                # docs = query.stream()
+                # dataResult = []
 
-                docs = query.stream()
-                dataResult = []
-
-                for doc in docs:
-                    dataResult.append(doc.to_dict())
+                # for doc in docs:
+                #     dataResult.append(doc.to_dict())
 
 
-                recipe_data = []
-                # กรณี - มีข้อมูล recipe
-                if dataResult:
-                    for item in dataResult:             
+                # recipe_data = []
+                # # กรณี - มีข้อมูล recipe
+                # if dataResult:
+                #     for item in dataResult:             
                        
 
-                        recipe_dict = {
-                            'id' : item.get('id'),
-                            'title' : item.get('title'),
-                            'img' : item.get('img'),
-                            'link' : item.get('link'),
-                            'favorite_status' : item.get('favorite_status'),
-                            'local_id' : local_id
-                        }
+                #         recipe_dict = {
+                #             'id' : item.get('id'),
+                #             'title' : item.get('title'),
+                #             'img' : item.get('img'),
+                #             'link' : item.get('link'),
+                #             'favorite_status' : item.get('favorite_status'),
+                #             'local_id' : local_id
+                #         }
                                             
-                        recipe_data.append(recipe_dict)
+                #         recipe_data.append(recipe_dict)
 
-              
-                return recipe_data, 200
+                # return recipe_data, 200
+
+                response = {
+                    "status": "1",
+                    "message": "Data updated successfully",
+                }
+                return response, 200
             else:
                 return {"error": "No data found"}, 404
             
