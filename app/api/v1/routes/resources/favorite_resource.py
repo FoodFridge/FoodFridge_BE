@@ -139,24 +139,62 @@ class FavoriteRecipeResource(Resource):
             data = request.get_json()
             favId = data.get('favId')
             isFavorite = data.get('isFavorite')
+            
+            
+
             # Create a Firestore client
+            
             db = firestore.client()
-            # Specify the collection reference
+
+            # Specify the collection and document reference
             collection_ref = db.collection('recipes')
             document_ref = collection_ref.document(favId)
-            # Update the 'status' field to a new value (e.g., 'Y' for 'Yes')
 
             # Check if the document exists
             doc = document_ref.get()
             if doc.exists:
-                document_ref.update({'status': isFavorite})
-                response = {
-                        "status": "1",
-                        "message": "Data updated successfully",
-                }
-                return response, 200
+
+                local_id = doc.to_dict().get('local_id')
+                print(f"Current local_id: {local_id}")
+
+                # Update the 'status' field to the new value
+                document_ref.update({'favorite_status': isFavorite})
+
+                query = collection_ref.where('local_id', '==', local_id)
+                      
+
+                docs = query.stream()
+                dataResult = []
+
+                for doc in docs:
+                    dataResult.append(doc.to_dict())
+
+
+                recipe_data = []
+                # กรณี - มีข้อมูล recipe
+                if dataResult:
+                    for item in dataResult:             
+                       
+
+                        recipe_dict = {
+                            'id' : item.get('id'),
+                            'title' : item.get('title'),
+                            'img' : item.get('img'),
+                            'link' : item.get('link'),
+                            'favorite_status' : item.get('favorite_status'),
+                            'local_id' : local_id
+                        }
+                                            
+                        recipe_data.append(recipe_dict)
+
+              
+                return recipe_data, 200
             else:
-                return {"error":"no data found"}, 404
+                return {"error": "No data found"}, 404
+            
+
+            
+          
             
         except Exception as e:
             # Handle the exception and return an appropriate response

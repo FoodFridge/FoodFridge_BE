@@ -420,9 +420,13 @@ class GenerateRecipeFromIngredientsWithEdamam(Resource):
 
                         docs = query.stream()
                         dataResult = []
+
+                        for doc in docs:
+                            dataResult.append(doc.to_dict())
+
                        
                         # กรณี - มีข้อมูล recipe
-                        if not docs:
+                        if dataResult:
                             favorite_status = document_id = ""
                             for item in dataResult:
                                         
@@ -430,8 +434,7 @@ class GenerateRecipeFromIngredientsWithEdamam(Resource):
                                 print("label",label)
                                 print("\n\n")
                                
-                                document_ref = collection_ref.document()
-                                document_id = document_ref.id
+                                document_id = item.get('id')  # Get the document ID
                                             
                                 # ถ้าเจอ title ที่ต้องการ ก็ดึงค่า favorite_status ออกมา
                                 favorite_status = item.get('favorite_status')
