@@ -129,7 +129,48 @@ from app.api.v1.routes.resources.auth_resource import authorization, messageWith
 #             # Handle the exception and return an appropriate response
 #             error_message = f"An error occurred: {str(e)}"
 #             return {"error": error_message}, 500
+
+
+class FavoriteRecipeByLocalIDResource(Resource):
+    #to do find user id
+    def get(self,local_id):
+        try:
+            print("local_id",local_id)
+            db = firestore.client()
+            collection_ref = db.collection('recipes')
+            query = collection_ref.where('favorite_status', '==', 'Y').where('local_id', '==', local_id)
+            docs = query.stream()
         
+            doc_data = []  # ตั้งค่าเริ่มต้นเป็นลิสต์เปล่า
+
+            for doc in docs:
+                doc_data.append(doc.to_dict())  # เพิ่มข้อมูลแต่ละ doc ในลิสต์
+        
+            recipe_data = []
+            if doc_data:
+                for item in doc_data:
+        
+                    recipe_dict = {
+                        'id' :  item.get('id'),
+                        'title' :  item.get('title'),
+                        'img' :  item.get('img'),
+                        'link' :  item.get('link'),
+                        'favorite_status' :  item.get('favorite_status'),
+                        'local_id' : local_id
+                    }
+                                            
+                    recipe_data.append(recipe_dict)
+                return recipe_data
+            else:
+                return {"error": 'not found!'}, 404
+
+                                 
+        except Exception as e:
+            # Handle the exception and return an appropriate response
+            error_message = f"An error occurred: {str(e)}"
+            return {"error": error_message}, 500
+
+
 
 class FavoriteRecipeResource(Resource):
     #to do find user id
