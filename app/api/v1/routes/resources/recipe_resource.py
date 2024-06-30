@@ -252,66 +252,46 @@ def retrieve_menu_items(api_key,ingredients, total_results):
                         start_index += len(items)   
     return menu_items[:total_results]  # Return up to the specified total_results
 
-# ไม่ใช้แล้ว เปลี่ยนไปใช้ api with edamam แทน 28-04-2024
-class GenerateRecipeFromIngredientsWithGoogle(Resource):
-    def post(self):
-        try:
+# 30-06-2024
+# class GenerateRecipeFromIngredientsWithGoogle(Resource):
+#     def post(self):
+#         try:
 
-            data = request.get_json()
-            ingredients = []
+#             data = request.get_json()
+#             ingredients = []
 
-            # Directly append values to the list
-            for value in data.values():
-                # Your logic for each ingredient goes here
-                ingredients.append(value)
+#             # Directly append values to the list
+#             for value in data.values():
+#                 # Your logic for each ingredient goes here
+#                 ingredients.append(value)
 
-            # print(ingredients)
-            # Load environment variables from .env file
-            load_dotenv()
+#             # print(ingredients)
+#             # Load environment variables from .env file
+#             load_dotenv()
 
 
 
-            # Access the API key from the environment variable
-            api_key = os.getenv("API_KEY_SEARCH")
+#             # Access the API key from the environment variable
+#             api_key = os.getenv("API_KEY_SEARCH")
 
-            # Check if API key is available
-            if not api_key:
-                raise Exception("API key not found in the environment variables.")
+#             # Check if API key is available
+#             if not api_key:
+#                 raise Exception("API key not found in the environment variables.")
 
-            menu_items = retrieve_menu_items(api_key, ingredients,10)
-            return {"success": True, "recipes": menu_items}
+#             menu_items = retrieve_menu_items(api_key, ingredients,10)
+#             return {"success": True, "recipes": menu_items}
 
-        except Exception as e:
-            # Handle the exception and return an appropriate response
-            error_message = f"An error occurred: {str(e)}"
-            logging.error(error_message)
-            return {"error": error_message}, 500
+#         except Exception as e:
+#             # Handle the exception and return an appropriate response
+#             error_message = f"An error occurred: {str(e)}"
+#             logging.error(error_message)
+#             return {"error": error_message}, 500
         
 
-# current api generate recipe 28-04-2024
+# current api generate recipe 30-06-2024
 class GenerateRecipeFromIngredientsWithEdamam(Resource):
     
     def post(self):
-        """
-        Generate a recipe with Edamam API.
-        ---
-        tags:
-        - Recipe
-        parameters:
-        - name: body
-            in: body
-            required: true
-            schema:
-            type: object
-            properties:
-                0:
-                type: string
-                1:
-                type: string
-        responses:
-        200:
-            description: Recipe generated successfully.
-        """
         try:
 
             data = request.get_json()
@@ -401,10 +381,12 @@ class GenerateRecipeFromIngredientsWithEdamam(Resource):
                     # print(item)
                     # print("\n\n\n")
                     recipe =  item.get('recipe','') # data
+                    # print("recipe",recipe)
                     label = recipe.get('label','') # ชื่อเมนู
                     image = recipe.get('image','') # รูปภาพเมนู
                     link = recipe.get('url','') # link สูตรอาหาร
                     
+                    # print("image",image)
                    
                     # เช็ค url https                     
                     if link.startswith('https://') and not any(blacklisted_url in link for blacklisted_url in url_blacklist):
@@ -428,20 +410,21 @@ class GenerateRecipeFromIngredientsWithEdamam(Resource):
                         # กรณี - มีข้อมูล recipe
                         if dataResult:
                             favorite_status = document_id = ""
-                            for item in dataResult:
+                            for item_result in dataResult:
                                         
-                                print("title",item.get('title'))
-                                print("label",label)
+                                # print("document_id",document_id)
+                                # print("title",item.get('title'))
+                                # print("label",label)
+
+                                # print("image",image)
+                                # print("img",item.get('img'))
                                 print("\n\n")
                                
-                                document_id = item.get('id')  # Get the document ID
+                                document_id = item_result.get('id')  # Get the document ID
                                             
                                 # ถ้าเจอ title ที่ต้องการ ก็ดึงค่า favorite_status ออกมา
-                                favorite_status = item.get('favorite_status')
-
-                                print("document_id",document_id)
-                               
-                                            
+                                favorite_status = item_result.get('favorite_status')
+        
                                 recipe_dict = {
                                     'id' : document_id,
                                     'title' : label,
