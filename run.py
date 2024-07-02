@@ -7,7 +7,7 @@ from app.core.firebase import initialize_firebase_app
 from app.api.v1.routes.resources.alpha_resource import AlphaResource
 from app.api.v1.routes.resources.ingredient_resource import IngredientResource ,IngredientResourceWithCategory, AddIngredients
 from app.api.v1.routes.resources.favorite_resource import FavoriteRecipeResource,FavoriteRecipeByLocalIDResource
-from app.api.v1.routes.resources.recipe_resource import GenerateRecipeFromIngredients,GenerateRecipeFromIngredientsWithGoogle,GenerateRecipeFromIngredientsWithEdamam
+from app.api.v1.routes.resources.recipe_resource import GenerateRecipeFromIngredients,GenerateRecipeFromIngredientsWithEdamam
 from app.api.v1.routes.resources.link_recipe_resource import LinkRecipeResource
 from app.api.v1.routes.resources.pantry_resource import PantryResourceByUser, AddPantryResource, EditPantryResource, DeletePantryResource, SearchIngredientResource
 
@@ -48,9 +48,6 @@ api.add_resource(FavoriteRecipeResource, '/api/v1/favoriteRecipe')
 api.add_resource(FavoriteRecipeByLocalIDResource, '/api/v1/favoriteRecipe/<string:local_id>')
 
 
-
-# api.add_resource(GenerateRecipeFromIngredients, '/api/v1/GenerateRecipe')
-api.add_resource(GenerateRecipeFromIngredientsWithGoogle, '/api/v1/GenerateRecipeWithGoogle')
 
 
 # endpoint for generate recipe use api edamam
