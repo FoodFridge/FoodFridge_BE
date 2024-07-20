@@ -182,7 +182,6 @@ class FavoriteRecipeResource(Resource):
             isFavorite = data.get('isFavorite')
             
             
-
             # Create a Firestore client
             
             db = firestore.client()
@@ -214,7 +213,6 @@ class FavoriteRecipeResource(Resource):
                 # if dataResult:
                 #     for item in dataResult:             
                        
-
                 #         recipe_dict = {
                 #             'id' : item.get('id'),
                 #             'title' : item.get('title'),
@@ -228,11 +226,33 @@ class FavoriteRecipeResource(Resource):
 
                 # return recipe_data, 200
 
-                response = {
-                    "status": "1",
-                    "message": "Data updated successfully",
-                }
-                return response, 200
+                db = firestore.client()
+                collection_ref = db.collection('recipes')
+                query = collection_ref.where('favorite_status', '==', 'Y').where('local_id', '==', local_id)
+                docs = query.stream()
+            
+                doc_data = []  # ตั้งค่าเริ่มต้นเป็นลิสต์เปล่า
+
+                for doc in docs:
+                    doc_data.append(doc.to_dict())  # เพิ่มข้อมูลแต่ละ doc ในลิสต์
+            
+                recipe_data = []
+                if doc_data:
+                    for item in doc_data:
+            
+                        recipe_dict = {
+                            'id' :  item.get('id'),
+                            'title' :  item.get('title'),
+                            'img' :  item.get('img'),
+                            'link' :  item.get('link'),
+                            'favorite_status' :  item.get('favorite_status'),
+                            'local_id' : local_id
+                        }
+                                                
+                        recipe_data.append(recipe_dict)
+                    return recipe_data
+                else:
+                    return {"error": 'not found!'}, 404
             else:
                 return {"error": "No data found"}, 404
             
