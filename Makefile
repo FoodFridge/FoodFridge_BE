@@ -20,7 +20,7 @@ build:
 
 	# Install dependencies into the 'build' directory
 	pip install --no-cache-dir -r requirements.txt -t build/
-	pip install --no-cache-dir pip install google-cloud-firestore -t build/
+	pip install --no-cache-dir google-cloud-firestore -t build/
 
 	# Copy the main script, .env, and firebase credentials into 'build'
 	cp ./$(MAIN_SCRIPT) ./build
