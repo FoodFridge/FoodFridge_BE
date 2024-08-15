@@ -45,7 +45,7 @@ api.add_resource(IngredientResourceWithCategory, '/api/v1/ingredient/<string:cat
 # api.add_resource(FavoriteRecipeResourceByUser, '/api/v1/favoriteRecipe')
 
 api.add_resource(FavoriteRecipeResource, '/api/v1/favoriteRecipe')
-api.add_resource(FavoriteRecipeByLocalIDResource, '/api/v1/favoriteRecipe/<string:local_id>')
+api.add_resource(FavoriteRecipeByLocalIDResource, '/api/v1/favoriteRecipe/<string:local_id>/<string:favorite_status>')
 
 
 

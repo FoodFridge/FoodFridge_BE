@@ -133,12 +133,12 @@ from app.api.v1.routes.resources.auth_resource import authorization, messageWith
 
 class FavoriteRecipeByLocalIDResource(Resource):
     #to do find user id
-    def get(self,local_id):
+    def get(self,local_id,favorite_status):
         try:
             print("local_id",local_id)
             db = firestore.client()
             collection_ref = db.collection('recipes')
-            query = collection_ref.where('favorite_status', '==', 'Y').where('local_id', '==', local_id)
+            query = collection_ref.where('favorite_status', '==', favorite_status).where('local_id', '==', local_id)
             docs = query.stream()
         
             doc_data = []  # ตั้งค่าเริ่มต้นเป็นลิสต์เปล่า
