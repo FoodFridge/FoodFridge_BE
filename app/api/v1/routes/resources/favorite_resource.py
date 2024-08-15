@@ -228,7 +228,7 @@ class FavoriteRecipeResource(Resource):
 
                 db = firestore.client()
                 collection_ref = db.collection('recipes')
-                query = collection_ref.where('favorite_status', '==', 'Y').where('local_id', '==', local_id)
+                query = collection_ref.where('local_id', '==', local_id)
                 docs = query.stream()
             
                 doc_data = []  # ตั้งค่าเริ่มต้นเป็นลิสต์เปล่า
